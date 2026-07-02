@@ -40,6 +40,9 @@ import com.google.android.material.tabs.TabLayout
 import com.perol.asdpl.pixivez.R
 import com.perol.asdpl.pixivez.base.RinkActivity
 import com.perol.asdpl.pixivez.databinding.ActivitySearchBinding
+import com.perol.asdpl.pixivez.services.PxEZApp
+import com.perol.asdpl.pixivez.ui.novel.NovelActivity
+import com.perol.asdpl.pixivez.ui.novel.NovelSearchResultActivity
 import com.perol.asdpl.pixivez.ui.pic.PictureActivity
 import com.perol.asdpl.pixivez.ui.user.UserMActivity
 
@@ -53,6 +56,10 @@ class SearchActivity : RinkActivity() {
             context.startActivity(intent)
         }
     }
+
+    // 首页模式决定搜索结果落地页,由 MainActivity 的 main_mode 决定
+    private val novelMode: Boolean
+        get() = PxEZApp.instance.pre.getString("main_mode", "illust") == "novel"
 
     lateinit var searchSuggestionFragment: SearchSuggestionFragment
     lateinit var trendTagFragment: TrendTagFragment
@@ -150,7 +157,12 @@ class SearchActivity : RinkActivity() {
                             if (!query.isDigitsOnly()) {
                                 return true
                             }
-                            PictureActivity.start(this@SearchActivity, query.toInt())
+                            // 小说模式下按 id 直达小说,否则直达插画
+                            if (novelMode) {
+                                NovelActivity.start(this@SearchActivity, query.toInt())
+                            } else {
+                                PictureActivity.start(this@SearchActivity, query.toInt())
+                            }
                         }
 
                         2 -> {
@@ -192,6 +204,11 @@ class SearchActivity : RinkActivity() {
     }
 
     private fun searchFor(query: String) {
+        // 小说模式走轻量小说结果页,插画模式走既有 tab 结果页
+        if (novelMode) {
+            NovelSearchResultActivity.start(this, query)
+            return
+        }
         val bundle = Bundle()
         bundle.putString("keyword", query)
         val intent = Intent(this, SearchResultActivity::class.java)
