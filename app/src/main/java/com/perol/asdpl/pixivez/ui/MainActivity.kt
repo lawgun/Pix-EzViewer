@@ -46,6 +46,7 @@ import androidx.core.view.get
 import androidx.core.view.isVisible
 import androidx.core.view.postDelayed
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.google.android.material.navigation.NavigationView
 import com.google.android.material.tabs.TabLayout
@@ -311,7 +312,13 @@ class MainActivity : RinkActivity(), NavigationView.OnNavigationItemSelectedList
                     Toasty.normal(this@MainActivity, R.string.back_to_the_top)
                     tabTime = System.currentTimeMillis()
                 } else {
-                    (supportFragmentManager.fragments.getOrNull(tab.position) as UpToTopFragment?)?.upToTop()
+                    // 小说模式的 tab fragment 不在 UpToTopFragment 体系内,
+                    // 安全分派:非 UpToTop 的直接找列表回顶(同 UpToTopListener 做法)
+                    when (val f = supportFragmentManager.fragments.getOrNull(tab.position)) {
+                        is UpToTopFragment -> f.upToTop()
+                        else -> f?.view?.findViewById<RecyclerView>(R.id.recyclerview)
+                            ?.scrollToPosition(0)
+                    }
                 }
             }
 
