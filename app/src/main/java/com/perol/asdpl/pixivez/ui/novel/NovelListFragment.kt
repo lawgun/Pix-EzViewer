@@ -6,14 +6,23 @@ import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.perol.asdpl.pixivez.R
 import com.perol.asdpl.pixivez.base.BaseVBFragment
-import com.perol.asdpl.pixivez.databinding.FragmentListBinding
+import com.perol.asdpl.pixivez.base.MaterialDialogs
+import com.perol.asdpl.pixivez.databinding.FragmentNovelListBinding
+import com.perol.asdpl.pixivez.objects.argument
 import com.perol.asdpl.pixivez.objects.argumentNullable
 
-// 用户主页「小说」tab:独立线性列表,复用 fragment_list 布局与 next_url 分页
-class NovelListFragment : BaseVBFragment<FragmentListBinding>() {
-    private var userid: Int? by argumentNullable()
+// 泛化小说列表:按 NOVEL_TAG 选数据源,next_url 上拉分页。
+// Follow / UserBookmark 顶部提供 公开/非公开 切换。
+class NovelListFragment : BaseVBFragment<FragmentNovelListBinding>() {
+    private var novelTag: String by argument(NOVEL_TAG.UserNovels.name)
+    private var extraArgs: MutableMap<String, Any?>? by argumentNullable()
     private lateinit var novelListAdapter: NovelListAdapter
     private val viewModel: NovelListViewModel by viewModels()
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        viewModel.setup(NOVEL_TAG.valueOf(novelTag), extraArgs)
+    }
 
     override fun loadData() {
         viewModel.onLoadFirst()
@@ -22,11 +31,6 @@ class NovelListFragment : BaseVBFragment<FragmentListBinding>() {
     override fun onResume() {
         isLoaded = novelListAdapter.data.isNotEmpty()
         super.onResume()
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        viewModel.userid = userid!!
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -39,6 +43,38 @@ class NovelListFragment : BaseVBFragment<FragmentListBinding>() {
         }
         novelListAdapter.setOnLoadMoreListener { viewModel.onLoadMore() }
         binding.swipeRefreshLayout.setOnRefreshListener { viewModel.onLoadFirst() }
+        configRestrict()
+    }
+
+    // 仅 Follow / UserBookmark 显示公开/非公开切换,照插画动态页的做法
+    private fun configRestrict() {
+        val toggleable =
+            viewModel.tag == NOVEL_TAG.Follow || viewModel.tag == NOVEL_TAG.UserBookmark
+        if (!toggleable) {
+            binding.btnRestrict.visibility = View.GONE
+            return
+        }
+        binding.btnRestrict.visibility = View.VISIBLE
+        renderRestrict()
+        val items = arrayOf(getString(R.string.publics), getString(R.string.privates))
+        binding.btnRestrict.setOnClickListener {
+            MaterialDialogs(requireContext()).show {
+                setSingleChoiceItems(
+                    items,
+                    if (viewModel.restrict.value == "public") 0 else 1
+                ) { _, index ->
+                    viewModel.restrict.value = if (index == 0) "public" else "private"
+                    renderRestrict()
+                    viewModel.onLoadFirst()
+                }
+            }
+        }
+    }
+
+    private fun renderRestrict() {
+        binding.btnRestrict.setText(
+            if (viewModel.restrict.value == "public") R.string.publics else R.string.privates
+        )
     }
 
     private fun initViewModel() {
@@ -57,8 +93,12 @@ class NovelListFragment : BaseVBFragment<FragmentListBinding>() {
     }
 
     companion object {
-        fun newInstance(userid: Int) = NovelListFragment().apply {
-            this.userid = userid
+        fun newInstance(
+            tag: NOVEL_TAG,
+            extraArgs: MutableMap<String, Any?>? = null
+        ) = NovelListFragment().apply {
+            this.novelTag = tag.name
+            this.extraArgs = extraArgs
         }
     }
 }

@@ -31,6 +31,7 @@ import com.perol.asdpl.pixivez.R
 import com.perol.asdpl.pixivez.core.PicListFragment
 import com.perol.asdpl.pixivez.core.TAG_TYPE
 import com.perol.asdpl.pixivez.objects.WeakValueHashMap
+import com.perol.asdpl.pixivez.ui.novel.NOVEL_TAG
 import com.perol.asdpl.pixivez.ui.novel.NovelListFragment
 
 class UserMPagerAdapter(
@@ -55,7 +56,10 @@ class UserMPagerAdapter(
                     TAG_TYPE.UserManga.name, 1,
                     mutableMapOf("userid" to userid)
                 )
-                2 -> NovelListFragment.newInstance(userid)
+                2 -> NovelListFragment.newInstance(
+                    NOVEL_TAG.UserNovels,
+                    mutableMapOf("userid" to userid)
+                )
                 3 -> PicListFragment.newInstance(
                     TAG_TYPE.UserBookmark.name, 3,
                     mutableMapOf("userid" to userid)
