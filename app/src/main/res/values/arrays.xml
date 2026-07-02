@@ -135,4 +135,15 @@
         <item>空 SNI</item>
         <item>明文 SNI(证书校验)</item>
     </string-array>
+    <string-array name="novel_rank_mode">
+        <item>每日</item>
+        <item>男性</item>
+        <item>女性</item>
+        <item>每周</item>
+        <item>AI</item>
+        <item>R18每日</item>
+        <item>R18每周</item>
+        <item>R18·AI</item>
+        <item>R18G</item>
+    </string-array>
 </resources>

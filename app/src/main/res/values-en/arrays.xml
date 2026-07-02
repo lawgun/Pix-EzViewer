@@ -81,4 +81,15 @@
         <item>Empty SNI</item>
         <item>Plaintext SNI (verified)</item>
     </string-array>
+    <string-array name="novel_rank_mode">
+        <item>Daily</item>
+        <item>Male</item>
+        <item>Female</item>
+        <item>Weekly</item>
+        <item>AI</item>
+        <item>R18 Daily</item>
+        <item>R18 Weekly</item>
+        <item>R18 AI</item>
+        <item>R18G</item>
+    </string-array>
 </resources>
