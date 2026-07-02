@@ -365,4 +365,6 @@
     <string name="novel_font_smaller">减小字号</string>
     <string name="novel_series_prev">上一篇</string>
     <string name="novel_series_next">下一篇</string>
+    <string name="switch_to_novel">切换到小说模式</string>
+    <string name="switch_to_illust">切换到插画模式</string>
 </resources>

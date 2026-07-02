@@ -70,6 +70,7 @@ import com.perol.asdpl.pixivez.services.PxEZApp
 import com.perol.asdpl.pixivez.ui.account.LoginActivity
 import com.perol.asdpl.pixivez.ui.home.HelloMainViewPager
 import com.perol.asdpl.pixivez.ui.manager.DownloadManagerActivity
+import com.perol.asdpl.pixivez.ui.novel.NovelMainViewPager
 import com.perol.asdpl.pixivez.ui.manager.ImgManagerActivity
 import com.perol.asdpl.pixivez.ui.pic.PictureActivity
 import com.perol.asdpl.pixivez.ui.search.SearchActivity
@@ -182,6 +183,14 @@ class MainActivity : RinkActivity(), NavigationView.OnNavigationItemSelectedList
                 FragmentActivity.start(this, TAG_TYPE.WalkThrough.name)
             }
 
+            R.id.nav_novel_mode -> {
+                val cur = PxEZApp.instance.pre.getString("main_mode", "illust")
+                PxEZApp.instance.pre.edit {
+                    putString("main_mode", if (cur == "novel") "illust" else "novel")
+                }
+                recreate()
+            }
+
             R.id.nav_search_pic -> {
                 startActivity(
                     Intent(
@@ -279,8 +288,14 @@ class MainActivity : RinkActivity(), NavigationView.OnNavigationItemSelectedList
         binding.navView.setNavigationItemSelectedListener(this)
         //initView()
         binding.tablayout.setupWithViewPager(binding.contentView)
-        val helloMainViewPager = HelloMainViewPager(supportFragmentManager)
-        binding.contentView.adapter = helloMainViewPager
+        // 首页模式:插画 / 小说,由抽屉切换、经 recreate() 重新装配
+        val novelMode = PxEZApp.instance.pre.getString("main_mode", "illust") == "novel"
+        binding.navView.menu.findItem(R.id.nav_novel_mode)?.setTitle(
+            if (novelMode) R.string.switch_to_illust else R.string.switch_to_novel
+        )
+        binding.contentView.adapter =
+            if (novelMode) NovelMainViewPager(supportFragmentManager)
+            else HelloMainViewPager(supportFragmentManager)
 
         binding.contentView.offscreenPageLimit =
             if (PxEZApp.instance.pre.getBoolean("refreshTab", false)) 0 else 3
