@@ -326,6 +326,10 @@ object DohApiDns : Dns {
             fallback
         }
     }
+
+    /** 供 WebView bypass:对任意域名经 DoH 解析(失败回退空表)。 */
+    fun lookupPublic(host: String): List<InetAddress> =
+        try { doh.lookup(host) } catch (e: Exception) { emptyList() }
 }
 
 /*
@@ -333,6 +337,10 @@ object DohApiDns : Dns {
  * │ 按 (DNS 维度 × SNI 维度) 装配鉴权/接口 OkHttpClient。                       │
  * └──────────────────────────────────────────────────────────────────────────┘
  */
+
+/** 供 bypass 复用系统信任链(校验开启时用);异常返回 null 退化为信任全部。 */
+fun systemTrustManagerOrNull(): javax.net.ssl.X509TrustManager? =
+    try { systemTrustManager } catch (e: Exception) { null }
 
 /** 系统默认信任链(校验开启时用,验证证书链到可信 CA)。 */
 private val systemTrustManager: X509TrustManager by lazy {
