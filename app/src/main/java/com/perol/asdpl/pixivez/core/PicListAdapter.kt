@@ -425,11 +425,14 @@ abstract class PicListAdapter(
             numLayout.visibility = View.GONE
         }
         val mainImage = holder.getView<ImageView>(R.id.item_img)
-        // #4: 加载前按 item 原始宽高比给 cell 定高(仅 ConstraintLayout 布局),
-        // 图片到达不再触发重测/SGLM 跨列重排 —— 下滑多图同时解析时尤其明显。
+        // #4: 加载前给 cell 定高(仅 ConstraintLayout 布局),图片到达不再触发重测/
+        // SGLM 跨列重排。比例必须跟实际加载的缩略图一致:needSmall 时加载的是
+        // square_medium(1:1 裁剪图),否则 medium 保持原图宽高比 —— 比例错配会让
+        // fitCenter 在 cell 内留白边。
         (mainImage.layoutParams as? ConstraintLayout.LayoutParams)?.let { lp ->
             if (item.width > 0 && item.height > 0) {
-                lp.dimensionRatio = "${item.width}:${item.height}"
+                lp.dimensionRatio =
+                    if (needSmall) "1:1" else "${item.width}:${item.height}"
                 lp.height = 0 // MATCH_CONSTRAINT:高度由宽度 × 比例决定
                 mainImage.layoutParams = lp
             }
