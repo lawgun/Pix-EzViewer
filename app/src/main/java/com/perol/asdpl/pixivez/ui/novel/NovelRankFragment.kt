@@ -52,11 +52,11 @@ class NovelRankFragment : Fragment() {
 
     companion object {
         // 全序模式表(SFW 在前,r18 / r18g 在后),与 novel_rank_mode 标签一一对应
-        private fun buildModes(restrictLevel: Int): List<String> = buildList {
-            addAll(listOf("day", "day_male", "day_female", "week", "week_ai"))
-            if (restrictLevel <= 1) addAll(listOf("day_r18", "week_r18", "week_ai_r18"))
-            if (restrictLevel == 0) add("week_r18g")
-        }
+        private fun buildModes(restrictLevel: Int): List<String> =
+            mutableListOf("day", "day_male", "day_female", "week", "week_ai").apply {
+                if (restrictLevel <= 1) addAll(listOf("day_r18", "week_r18", "week_ai_r18"))
+                if (restrictLevel == 0) add("week_r18g")
+            }
 
         fun newInstance() = NovelRankFragment()
     }
