@@ -28,14 +28,24 @@ class NovelViewModel : BaseViewModel() {
             }
         }
         launchUI {
-            try {
+            val parsed = try {
                 val html = withContext(Dispatchers.IO) {
                     retrofit.api.getNovelText(id).string()
                 }
-                web.value = parseWebNovel(html)
+                parseWebNovel(html)
             } catch (e: Exception) {
                 CrashHandler.instance.e("novel", "text $id failed", e)
-                web.value = null
+                null
+            }
+            // webview 抽取失败时 fallback 到 /v1/novel/text 纯文本
+            web.value = parsed ?: try {
+                val text = withContext(Dispatchers.IO) {
+                    retrofit.api.getNovelTextApi(id).novel_text
+                }
+                if (text.isNotBlank()) NovelWebResponse(id = id.toString(), text = text) else null
+            } catch (e: Exception) {
+                CrashHandler.instance.e("novel", "text fallback $id failed", e)
+                null
             }
         }
     }

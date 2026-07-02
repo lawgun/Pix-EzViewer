@@ -34,6 +34,8 @@ import com.perol.asdpl.pixivez.data.model.IllustRecommendResponse
 import com.perol.asdpl.pixivez.data.model.ListUserResponse
 import com.perol.asdpl.pixivez.data.model.NovelDetailResponse
 import com.perol.asdpl.pixivez.data.model.NovelResponse
+import com.perol.asdpl.pixivez.data.model.NovelTextResponse
+import com.perol.asdpl.pixivez.data.model.NovelTrendingtagResponse
 import com.perol.asdpl.pixivez.data.model.PostCommentsResponse
 import com.perol.asdpl.pixivez.data.model.SearchIllustResponse
 import com.perol.asdpl.pixivez.data.model.SearchUserResponse
@@ -187,14 +189,16 @@ interface PixivApiService { //TODO: check filter=for_android
         @Query("word") word: String
     ): SearchUserResponse
 
-    @GET("/v1/search/novel")
+    @GET("/v1/search/novel?filter=for_android&merge_plain_keyword_results=true")
     suspend fun getSearchNovel(
         @Query("word") word: String,
         @Query("sort") sort: String,
-        @Query("search_target") search_target: String,
+        @Query("search_target") search_target: String?,
+        @Query("start_date") start_date: String?,
+        @Query("end_date") end_date: String?,
         @Query("bookmark_num") paramInteger: Int?,
-        @Query("duration") duration: String
-    ): ResponseBody
+        @Query("duration") duration: String?
+    ): NovelResponse
 
     @Multipart
     @POST("/v1/user/profile/edit")
@@ -318,6 +322,43 @@ interface PixivApiService { //TODO: check filter=for_android
     suspend fun getUserNovels(
         @Query("user_id") uid: Int
     ): NovelResponse
+
+    @GET("/v1/novel/recommended?include_privacy_policy=true&filter=for_android&include_ranking_novels=true")
+    suspend fun getNovelRecommend(
+    ): NovelResponse
+
+    @GET("/v1/novel/ranking?filter=for_android")
+    suspend fun getNovelRanking(
+        @Query("mode") mode: String,
+        @Query("date") date: String? = null
+    ): NovelResponse
+
+    @GET("/v1/novel/follow")
+    suspend fun getNovelFollow(
+        @Query("restrict") restrict: String
+    ): NovelResponse
+
+    @GET("/v1/user/bookmarks/novel")
+    suspend fun getUserBookmarkNovel(
+        @Query("user_id") uid: Int,
+        @Query("restrict") restrict: String
+    ): NovelResponse
+
+    @GET("/v1/trending-tags/novel?filter=for_android")
+    suspend fun getNovelTrendTags(
+    ): NovelTrendingtagResponse
+
+    // 系列内小说列表(响应含 novels + next_url,复用 NovelResponse)
+    @GET("/v2/novel/series")
+    suspend fun getNovelSeries(
+        @Query("series_id") series_id: Int
+    ): NovelResponse
+
+    // /v1/novel/text 纯文本备选:webview 解析失败时 fallback
+    @GET("/v1/novel/text")
+    suspend fun getNovelTextApi(
+        @Query("novel_id") novel_id: Int
+    ): NovelTextResponse
 
     @GET("/v2/novel/detail")
     suspend fun getNovelDetail(

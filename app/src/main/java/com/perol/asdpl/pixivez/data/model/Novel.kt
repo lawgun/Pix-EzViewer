@@ -5,46 +5,48 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.nullable
 
+// 字段对照 app-api 小说响应;非 id/图片/作者的元字段一律给默认值,
+// 兼容 recommend/rank/follow/search 等列表间的字段差异,防解析崩
 @Serializable
 data class Novel(
     val id: Int,
-    val title: String,
-    val caption: String,
-    val restrict: Int,
+    val title: String = "",
+    val caption: String = "",
+    val restrict: Int = 0,
     @SerialName("x_restrict")
-    val x_restrict: Int,
+    val x_restrict: Int = 0,
     @SerialName("image_urls")
     val image_urls: ImageUrls,
     @SerialName("is_original")
-    val is_original: Boolean,
+    val is_original: Boolean = false,
     @SerialName("create_date")
-    val create_date: String,
-    val tags: List<Tag>,
+    val create_date: String = "",
+    val tags: List<Tag> = emptyList(),
     @SerialName("page_count")
-    val page_count: Int,
+    val page_count: Int = 0,
     @SerialName("text_length")
-    val text_length: Int,
+    val text_length: Int = 0,
     val user: User,
     @Serializable(with = EmptyAsNullSeries::class)
-    val series: Series?,
+    val series: Series? = null,
     @SerialName("total_view")
-    val totalView: Int,
+    val totalView: Int = 0,
     @SerialName("total_bookmarks")
-    val total_bookmarks: Int,
+    val total_bookmarks: Int = 0,
     @SerialName("is_bookmarked")
-    val is_bookmarked: Boolean,
+    val is_bookmarked: Boolean = false,
     @SerialName("visible")
-    val visible: Boolean,
+    val visible: Boolean = true,
     @SerialName("is_muted")
-    val is_muted: Boolean,
+    val is_muted: Boolean = false,
     @SerialName("total_comments")
-    val total_comments: Int,
+    val total_comments: Int = 0,
     @SerialName("is_mypixiv_only")
     val is_mypixiv_only: Boolean = false,
     @SerialName("is_x_restricted")
     val is_x_restricted: Boolean = false,
     @SerialName("novel_ai_type")
-    val novel_ai_type: Int
+    val novel_ai_type: Int = 0
 )
 object EmptyAsNullSeries :
     EmptyAsNullJsonTransformingSerializer<Series?>(Series.serializer().nullable)
@@ -87,4 +89,26 @@ class NovelNaviItem(
     val id: Int,
     val viewable: Boolean = true,
     val title: String = ""
+)
+
+// GET /v1/novel/text 纯文本备选:webview 解析失败时 fallback,只取正文
+@Serializable
+class NovelTextResponse(
+    @SerialName("novel_text")
+    val novel_text: String = ""
+)
+
+// GET /v1/trending-tags/novel:结构对照 trending-tags/illust,承载对象为 novel
+@Serializable
+class NovelTrendingtagResponse(
+    @SerialName("trend_tags")
+    val trend_tags: MutableList<NovelTrendTagsBean>
+)
+
+@Serializable
+class NovelTrendTagsBean(
+    val tag: String,
+    @SerialName("translated_name")
+    val translated_name: String?,
+    val novel: Novel
 )
