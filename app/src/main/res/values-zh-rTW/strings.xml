@@ -321,4 +321,9 @@
     <string name="auto_load_related_illust">自動加載相關推薦圖片</string>
     <string name="refreshDNS">刷新DNS</string>
     <string name="block_user">屏蔽用戶</string>
+    <string name="novel">小說</string>
+    <string name="novel_font_larger">增大字型</string>
+    <string name="novel_font_smaller">縮小字型</string>
+    <string name="novel_series_prev">上一篇</string>
+    <string name="novel_series_next">下一篇</string>
 </resources>

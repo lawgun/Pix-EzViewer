@@ -321,4 +321,9 @@
     <string name="view_user_blocked">ユーザー %1$d をブロックしています。表示しますか？</string>
     <string name="auto_load_related_illust">関連作品画像を自動読み込み</string>
     <string name="refreshDNS">DNSを更新</string>
+    <string name="novel">小説</string>
+    <string name="novel_font_larger">文字を大きく</string>
+    <string name="novel_font_smaller">文字を小さく</string>
+    <string name="novel_series_prev">前へ</string>
+    <string name="novel_series_next">次へ</string>
 </resources>

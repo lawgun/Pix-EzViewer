@@ -352,4 +352,9 @@
     <string name="view_user_blocked">User %1$d 已被屏蔽, 确定打开么？</string>
     <string name="auto_load_related_illust">自动加载相关推荐图片</string>
     <string name="refreshDNS">刷新DNS</string>
+    <string name="novel">小说</string>
+    <string name="novel_font_larger">增大字号</string>
+    <string name="novel_font_smaller">减小字号</string>
+    <string name="novel_series_prev">上一篇</string>
+    <string name="novel_series_next">下一篇</string>
 </resources>

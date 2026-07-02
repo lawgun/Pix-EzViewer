@@ -323,4 +323,9 @@
     <string name="view_user_blocked">User %1$d Blocked, continue？</string>
     <string name="auto_load_related_illust">Autoload related Illust</string>
     <string name="refreshDNS">Refresh DNS</string>
+    <string name="novel">Novel</string>
+    <string name="novel_font_larger">Larger font</string>
+    <string name="novel_font_smaller">Smaller font</string>
+    <string name="novel_series_prev">Previous</string>
+    <string name="novel_series_next">Next</string>
 </resources>
