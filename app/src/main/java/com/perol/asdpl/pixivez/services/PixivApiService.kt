@@ -37,7 +37,9 @@ import com.perol.asdpl.pixivez.data.model.NovelResponse
 import com.perol.asdpl.pixivez.data.model.NovelTextResponse
 import com.perol.asdpl.pixivez.data.model.NovelTrendingtagResponse
 import com.perol.asdpl.pixivez.data.model.PostCommentsResponse
+import com.perol.asdpl.pixivez.data.model.RestrictedModeSettingsResponse
 import com.perol.asdpl.pixivez.data.model.SearchIllustResponse
+import com.perol.asdpl.pixivez.data.model.UserAISettingsResponse
 import com.perol.asdpl.pixivez.data.model.SearchUserResponse
 import com.perol.asdpl.pixivez.data.model.SpotlightResponse
 import com.perol.asdpl.pixivez.data.model.TagsListResponse
@@ -391,6 +393,70 @@ interface PixivApiService { //TODO: check filter=for_android
         @Path("type") type: String,
         @Field("comment_id") comment_id: Int,
     )
+
+    // ─── 独立设置 / 系列 / watchlist(暂无 UI 消费方,接口+模型就位)──────
+
+    @GET("/v1/user/ai-show-settings")
+    suspend fun getUserAISettings(): UserAISettingsResponse
+
+    @FormUrlEncoded
+    @POST("/v1/user/ai-show-settings/edit")
+    suspend fun postUserAIShowSettings(
+        @Field("show_ai") show_ai: Boolean
+    ): ResponseBody
+
+    @GET("/v1/user/restricted-mode-settings")
+    suspend fun getRestrictedModeSettings(): RestrictedModeSettingsResponse
+
+    @FormUrlEncoded
+    @POST("/v1/user/restricted-mode-settings")
+    suspend fun postRestrictedModeSettings(
+        @Field("is_restricted_mode_enabled") is_restricted_mode_enabled: Boolean
+    ): ResponseBody
+
+    @GET("/v1/manga/recommended?filter=for_ios&include_ranking_label=true")
+    suspend fun getMangaRecommend(): IllustRecommendResponse
+
+    @GET("/v1/illust/series")
+    suspend fun getIllustSeries(
+        @Query("illust_series_id") illust_series_id: Int
+    ): IllustNext
+
+    @GET("/v1/illust-series/illust")
+    suspend fun getIllustSeriesIllust(
+        @Query("illust_id") illust_id: Int
+    ): IllustNext
+
+    // watchlist 响应结构随类型而异且无消费方,返回原始 body
+    @GET("/v1/watchlist/novel")
+    suspend fun getWatchlistNovel(): ResponseBody
+
+    @FormUrlEncoded
+    @POST("/v1/watchlist/novel/add")
+    suspend fun postWatchlistNovelAdd(
+        @Field("series_id") series_id: Int
+    ): ResponseBody
+
+    @FormUrlEncoded
+    @POST("/v1/watchlist/novel/delete")
+    suspend fun postWatchlistNovelDelete(
+        @Field("series_id") series_id: Int
+    ): ResponseBody
+
+    @GET("/v1/watchlist/manga")
+    suspend fun getWatchlistManga(): ResponseBody
+
+    @FormUrlEncoded
+    @POST("/v1/watchlist/manga/add")
+    suspend fun postWatchlistMangaAdd(
+        @Field("series_id") series_id: Int
+    ): ResponseBody
+
+    @FormUrlEncoded
+    @POST("/v1/watchlist/manga/delete")
+    suspend fun postWatchlistMangaDelete(
+        @Field("series_id") series_id: Int
+    ): ResponseBody
 
     @GET
     suspend fun getUrl(
