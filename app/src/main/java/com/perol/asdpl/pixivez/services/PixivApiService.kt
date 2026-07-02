@@ -59,7 +59,7 @@ import retrofit2.http.Url
 
 interface PixivApiService { //TODO: check filter=for_android
 
-    @GET("/v1/spotlight/articles") //?filter=for_android
+    @GET("/v1/spotlight/articles?filter=for_android")
     suspend fun getPixivisionArticles(
         @Query("category") category: String = "all"
     ): SpotlightResponse
@@ -73,7 +73,7 @@ interface PixivApiService { //TODO: check filter=for_android
     // &include_ranking_label=true&include_ranking_illusts=false
     // &min_bookmark_id_for_recent_illust=4078859313
     // &max_bookmark_id_for_recommend=4068770682&offset=0
-    @GET("/v1/illust/recommended")
+    @GET("/v1/illust/recommended?filter=for_ios&include_ranking_label=true")
     suspend fun getIllustRecommend(
     ): IllustRecommendResponse
 
@@ -82,7 +82,7 @@ interface PixivApiService { //TODO: check filter=for_android
         @Query("content_type") contentType: String? = null //illust manga
     ): IllustNext
 
-    @GET("/v1/illust/ranking") //?filter=for_android
+    @GET("/v1/illust/ranking?filter=for_android")
     suspend fun getIllustRanking(
         @Query("mode") mode: String,
         @Query("date") date: String?
@@ -149,7 +149,7 @@ interface PixivApiService { //TODO: check filter=for_android
         @Query("word") word: String?
     ): TagsListResponse
 
-    @GET("/v1/trending-tags/illust") //?filter=for_android
+    @GET("/v1/trending-tags/illust?filter=for_android")
     suspend fun getIllustTrendTags(
     ): TrendingtagResponse
 
@@ -161,10 +161,12 @@ interface PixivApiService { //TODO: check filter=for_android
         @Query("search_target") search_target: String?,
         @Query("start_date") start_date: String?,
         @Query("end_date") end_date: String?,
-        @Query("bookmark_num") paramInteger: Int?
+        @Query("bookmark_num_min") bookmark_num_min: Int?,
+        @Query("bookmark_num_max") bookmark_num_max: Int? = null,
+        @Query("search_ai_type") search_ai_type: Int? = null
     ): SearchIllustResponse
 
-    @GET("/v1/search/popular-preview/illust?merge_plain_keyword_results=true") //&filter=for_android
+    @GET("/v1/search/popular-preview/illust?include_translated_tag_results=true&merge_plain_keyword_results=true")
     suspend fun getSearchIllustPreview(
         @Query("word") word: String,
         @Query("sort") sort: String,
@@ -173,14 +175,14 @@ interface PixivApiService { //TODO: check filter=for_android
         @Query("duration") duration: String?
     ): SearchIllustResponse
 
-    @GET("/v1/search/popular-preview/illust") //?filter=for_android
+    @GET("/v1/search/popular-preview/illust?include_translated_tag_results=true&merge_plain_keyword_results=true")
     suspend fun getPopularPreviewIllust(
         @Query("word") word: String,
         @Query("search_target") search_target: String,
         @Query("duration") duration: String
     ): TagsListResponse
 
-    @GET("/v1/search/user") //?filter=for_android
+    @GET("/v1/search/user?filter=for_android")
     suspend fun getSearchUser(
         @Query("word") word: String
     ): SearchUserResponse
@@ -200,28 +202,29 @@ interface PixivApiService { //TODO: check filter=for_android
         @Part paramRequestBody: MultipartBody.Part
     ): ResponseBody
 
-    @GET("/v1/user/recommended") //?filter=for_android
+    @GET("/v1/user/recommended?filter=for_android")
     suspend fun getUserRecommended(
         @Query("offset") offset: Int? = null,
     ): SearchUserResponse
 
-    @GET("/v1/user/follower") //?filter=for_android
+    @GET("/v1/user/follower?filter=for_android")
     suspend fun getUserFollower(
-        @Query("user_id") uid: Int
+        @Query("user_id") uid: Int,
+        @Query("restrict") restrict: String = "public"
     ): SearchUserResponse
 
-    @GET("/v1/user/following") //?filter=for_android
+    @GET("/v1/user/following?filter=for_android")
     suspend fun getUserFollowing(
         @Query("user_id") uid: Int,
         @Query("restrict") restrict: String
     ): SearchUserResponse
 
-    @GET("/v1/user/detail") //?filter=for_android
+    @GET("/v1/user/detail?filter=for_android")
     suspend fun getUserDetail(
         @Query("user_id") id: Int
     ): UserDetail
 
-    @GET("/v1/user/illusts") //?filter=for_android
+    @GET("/v1/user/illusts?filter=for_android")
     suspend fun getUserIllusts(
         @Query("user_id") uid: Int,
         @Query("type") type: String, //illust manga novel
@@ -259,12 +262,12 @@ interface PixivApiService { //TODO: check filter=for_android
     ): ResponseBody
 
 
-    @GET("/v1/illust/detail") //?filter=for_android
+    @GET("/v1/illust/detail?filter=for_android")
     suspend fun getIllust(
         @Query("illust_id") pid: Int
     ): IllustDetailResponse
 
-    @GET("/v2/illust/related") //?filter=for_android
+    @GET("/v2/illust/related?filter=for_android")
     suspend fun getIllustRelated(
         @Query("illust_id") pid: Int
     ): IllustNext

@@ -53,7 +53,7 @@ class UserListViewModel : BaseViewModel() {
             }
 
             "Follower" -> {
-                { retrofit.api.getUserFollower(userid) }
+                { retrofit.api.getUserFollower(userid, restrict.value) }
             }
 
             "Related" -> {
