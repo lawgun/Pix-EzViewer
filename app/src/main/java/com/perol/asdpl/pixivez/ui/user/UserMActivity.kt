@@ -138,7 +138,7 @@ class UserMActivity : RinkActivity() {
 
         if (AppDataRepo.isSelfPage(id)) {
             //binding.imageviewUserimage.transitionName = "CurrentUserImage"
-            viewModel.currentTab.value = 2
+            viewModel.currentTab.value = 3
             binding.fab.visibility = View.GONE
         } else {
             binding.fab.show()

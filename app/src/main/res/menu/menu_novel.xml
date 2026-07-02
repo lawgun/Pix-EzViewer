@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context="com.perol.asdpl.pixivez.ui.novel.NovelActivity"
+    xmlns:tools="http://schemas.android.com/tools">
+    <item
+        android:id="@+id/action_novel_bookmark"
+        android:icon="@drawable/ic_action_hearts"
+        android:title="@string/bookmark"
+        app:iconTint="?android:colorControlNormal"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_novel_font_larger"
+        android:title="@string/novel_font_larger"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_novel_font_smaller"
+        android:title="@string/novel_font_smaller"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_novel_prev"
+        android:title="@string/novel_series_prev"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_novel_next"
+        android:title="@string/novel_series_next"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_novel_share"
+        android:icon="@drawable/ic_action_share"
+        android:title="@string/share"
+        app:iconTint="?android:colorControlNormal"
+        app:showAsAction="never" />
+</menu>

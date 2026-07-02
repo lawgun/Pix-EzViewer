@@ -197,7 +197,7 @@ class UserInfoFragment : LazyFragment() { // Required empty public constructor
                     "ta的收藏" + userDetail.profile.total_illust_bookmarks_public,
                     "total_bookmarks"
                 ) {
-                    viewModel.currentTab.value = 2
+                    viewModel.currentTab.value = 3
                 }
             )
         }

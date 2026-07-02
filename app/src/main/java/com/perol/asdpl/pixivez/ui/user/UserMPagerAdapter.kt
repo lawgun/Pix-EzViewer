@@ -31,15 +31,16 @@ import com.perol.asdpl.pixivez.R
 import com.perol.asdpl.pixivez.core.PicListFragment
 import com.perol.asdpl.pixivez.core.TAG_TYPE
 import com.perol.asdpl.pixivez.objects.WeakValueHashMap
+import com.perol.asdpl.pixivez.ui.novel.NovelListFragment
 
 class UserMPagerAdapter(
     var activity: AppCompatActivity,
     var userid: Int
 ) : FragmentStateAdapter(activity) {
 
-    private val fragments = WeakValueHashMap<Int, Fragment>(4)
+    private val fragments = WeakValueHashMap<Int, Fragment>(5)
     override fun getItemCount(): Int {
-        return 4
+        return 5
     }
 
     override fun createFragment(position: Int): Fragment {
@@ -54,8 +55,9 @@ class UserMPagerAdapter(
                     TAG_TYPE.UserManga.name, 1,
                     mutableMapOf("userid" to userid)
                 )
-                2 -> PicListFragment.newInstance(
-                    TAG_TYPE.UserBookmark.name, 2,
+                2 -> NovelListFragment.newInstance(userid)
+                3 -> PicListFragment.newInstance(
+                    TAG_TYPE.UserBookmark.name, 3,
                     mutableMapOf("userid" to userid)
                 )
                 else -> UserInfoFragment.newInstance(userid)
@@ -68,7 +70,8 @@ class UserMPagerAdapter(
         fun getPageTitle(position: Int) = when (position) {
             0 -> R.string.illust
             1 -> R.string.manga
-            2 -> R.string.bookmark
+            2 -> R.string.novel
+            3 -> R.string.bookmark
             else -> R.string.abouts
         }
     }

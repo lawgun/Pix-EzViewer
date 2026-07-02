@@ -29,6 +29,7 @@ import com.perol.asdpl.pixivez.data.model.BookMarkTagsResponse
 import com.perol.asdpl.pixivez.data.model.CommentsResponse
 import com.perol.asdpl.pixivez.data.model.IllustNext
 import com.perol.asdpl.pixivez.data.model.ListUserResponse
+import com.perol.asdpl.pixivez.data.model.NovelResponse
 import com.perol.asdpl.pixivez.data.model.SearchUserResponse
 import com.perol.asdpl.pixivez.data.model.SpotlightResponse
 import com.perol.asdpl.pixivez.networks.RestClient
@@ -54,6 +55,7 @@ class RetrofitRepository {
     suspend fun getIllustNext(url: String): IllustNext = getNext(url)
     suspend fun getNextIllustComments(url: String): CommentsResponse = getNext(url)
     suspend fun getNextPixivisionArticles(url: String): SpotlightResponse = getNext(url)
+    suspend fun getNextNovels(url: String): NovelResponse = getNext(url)
 
     companion object {
         private var instance: RetrofitRepository? = null

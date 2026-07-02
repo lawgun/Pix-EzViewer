@@ -48,3 +48,43 @@ data class Novel(
 )
 object EmptyAsNullSeries :
     EmptyAsNullJsonTransformingSerializer<Series?>(Series.serializer().nullable)
+
+// ─── 小说列表 / 详情 / 正文 响应 ─────────────────────────────────
+
+// GET /v1/user/novels 等列表响应,next_url 分页复用 INext 惯例
+@Serializable
+class NovelResponse(
+    val novels: MutableList<Novel>,
+    override val next_url: String?
+) : INext<Novel> {
+    override fun data() = novels
+}
+
+// GET /v2/novel/detail
+@Serializable
+class NovelDetailResponse(
+    val novel: Novel
+)
+
+// GET /webview/v2/novel 内嵌 JSON 的正文模型:字段为 camelCase、id 为字符串,
+// 只取正文与系列导航,其余字段靠 Json.ignoreUnknownKeys 容错
+@Serializable
+class NovelWebResponse(
+    val id: String = "",
+    val title: String = "",
+    val text: String = "",
+    val seriesNavigation: SeriesNavigation? = null
+)
+
+@Serializable
+class SeriesNavigation(
+    val prevNovel: NovelNaviItem? = null,
+    val nextNovel: NovelNaviItem? = null
+)
+
+@Serializable
+class NovelNaviItem(
+    val id: Int,
+    val viewable: Boolean = true,
+    val title: String = ""
+)
