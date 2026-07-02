@@ -32,6 +32,8 @@ import com.perol.asdpl.pixivez.data.model.IllustDetailResponse
 import com.perol.asdpl.pixivez.data.model.IllustNext
 import com.perol.asdpl.pixivez.data.model.IllustRecommendResponse
 import com.perol.asdpl.pixivez.data.model.ListUserResponse
+import com.perol.asdpl.pixivez.data.model.NovelDetailResponse
+import com.perol.asdpl.pixivez.data.model.NovelResponse
 import com.perol.asdpl.pixivez.data.model.PostCommentsResponse
 import com.perol.asdpl.pixivez.data.model.SearchIllustResponse
 import com.perol.asdpl.pixivez.data.model.SearchUserResponse
@@ -308,6 +310,36 @@ interface PixivApiService { //TODO: check filter=for_android
         @Field("comment") comment: String,
         @Field("parent_comment_id") parent_comment_id: Int? = null,
     ): PostCommentsResponse
+
+    @GET("/v1/user/novels?filter=for_android")
+    suspend fun getUserNovels(
+        @Query("user_id") uid: Int
+    ): NovelResponse
+
+    @GET("/v2/novel/detail")
+    suspend fun getNovelDetail(
+        @Query("novel_id") novel_id: Int
+    ): NovelDetailResponse
+
+    // 正文为 HTML(内嵌 JSON),返回原始 body 交由上层抽取解析
+    @GET("/webview/v2/novel")
+    suspend fun getNovelText(
+        @Query("id") novel_id: Int
+    ): ResponseBody
+
+    @FormUrlEncoded
+    @POST("/v2/novel/bookmark/add")
+    suspend fun postLikeNovel(
+        @Field("novel_id") novel_id: Int,
+        @Field("restrict") restrict: String,
+        @Field("tags[]") tagList: List<String>? = null
+    ): ResponseBody
+
+    @FormUrlEncoded
+    @POST("/v1/novel/bookmark/delete")
+    suspend fun postUnlikeNovel(
+        @Field("novel_id") novel_id: Int
+    ): ResponseBody
 
     @FormUrlEncoded
     @POST("/v1/{type}/comment/delete")
