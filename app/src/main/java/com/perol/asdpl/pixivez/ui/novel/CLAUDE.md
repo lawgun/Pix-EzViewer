@@ -24,8 +24,8 @@
 | `NovelListFragment.kt` | 泛化小说列表 `BaseVBFragment<FragmentNovelListBinding>`。`newInstance(tag, extraArgs)` 对齐 `PicListFragment`;线性排布 + next_url 上拉分页。Follow/UserBookmark 顶部提供 公开/非公开 切换。 |
 | `NovelListViewModel.kt` | 列表数据源。`NOVEL_TAG`(Recommend/Rank/Follow/UserNovels/UserBookmark/Search)经 `loadFirstRx` 选端点;`restrict` 供 Follow/UserBookmark 切换;`getNextNovels(next_url)` 加载更多。 |
 | `NovelListAdapter.kt` | 列表项适配器 `LBaseQuickAdapter<Novel>`(封面 + 标题 + 作者 + 字数/收藏数),点击进 `NovelActivity`。 |
-| `NovelActivity.kt` | 阅读页(`RinkActivity`)。头部标题/作者/标签 + 正文;字号 SharedPreferences 记忆(`novel_text_size`,12~32sp)、收藏 toggle、系列上/下一篇。 |
-| `NovelViewModel.kt` | 阅读页数据。并行拉详情(元数据 + 收藏态)与正文;`parseWebNovel` 从 webview HTML 抽 JSON,失败时 fallback `/v1/novel/text` 纯文本;`renderNovelText` 将 pixiv 自有标记转纯文本。 |
+| `NovelActivity.kt` | 阅读页(`RinkActivity`)。正文分块渲染:`RecyclerView` + 私有 `NovelReaderAdapter`,position 0 头部(`view_novel_header`,标题/作者/标签),其后每项一块正文(`view_novel_chunk`),块级懒加载避免长文单 TextView 全量测量卡顿;字号 SharedPreferences 记忆(`novel_text_size`,12~32sp,改字号仅重绑正文块)、收藏 toggle、系列上/下一篇。 |
+| `NovelViewModel.kt` | 阅读页数据。并行拉详情(元数据 + 收藏态)与正文;`parseWebNovel` 从 webview HTML 抽 JSON,失败时 fallback `/v1/novel/text` 纯文本;`renderNovelChunks` 在 Default 线程按 `[newpage]`/段落切块(单块上限 3000 字符),`renderNovelText` 将 pixiv 自有标记转纯文本。 |
 
 ## 正文获取(关键约束)
 
