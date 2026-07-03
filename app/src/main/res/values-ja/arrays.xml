@@ -64,4 +64,15 @@
         <item>同時ブクマ: ダウンロード時に自動でブックマーク</item>
         <item>一括アクション: 1タップでブックマーク+ダウンロード＋作者フォロー、長押しで詳細ページ表示</item>
     </string-array>
+    <string-array name="novel_rank_mode">
+        <item>デイリー</item>
+        <item>男性</item>
+        <item>女性</item>
+        <item>ウィークリー</item>
+        <item>AI</item>
+        <item>R18デイリー</item>
+        <item>R18ウィークリー</item>
+        <item>R18 AI</item>
+        <item>R18G</item>
+    </string-array>
 </resources>

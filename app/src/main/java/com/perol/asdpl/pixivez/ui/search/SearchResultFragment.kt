@@ -142,6 +142,7 @@ class SearchResultViewModel : PicListViewModel() {
                     searchTargetT[searchTarget],
                     startDate.value.generateDateString(),
                     endDate.value.generateDateString(),
+                    null,
                     null
                 )
             }, data, nextUrl, ::localSortByBookmarks) {

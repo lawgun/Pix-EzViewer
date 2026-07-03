@@ -34,8 +34,12 @@ import com.perol.asdpl.pixivez.data.model.IllustRecommendResponse
 import com.perol.asdpl.pixivez.data.model.ListUserResponse
 import com.perol.asdpl.pixivez.data.model.NovelDetailResponse
 import com.perol.asdpl.pixivez.data.model.NovelResponse
+import com.perol.asdpl.pixivez.data.model.NovelTextResponse
+import com.perol.asdpl.pixivez.data.model.NovelTrendingtagResponse
 import com.perol.asdpl.pixivez.data.model.PostCommentsResponse
+import com.perol.asdpl.pixivez.data.model.RestrictedModeSettingsResponse
 import com.perol.asdpl.pixivez.data.model.SearchIllustResponse
+import com.perol.asdpl.pixivez.data.model.UserAISettingsResponse
 import com.perol.asdpl.pixivez.data.model.SearchUserResponse
 import com.perol.asdpl.pixivez.data.model.SpotlightResponse
 import com.perol.asdpl.pixivez.data.model.TagsListResponse
@@ -59,7 +63,7 @@ import retrofit2.http.Url
 
 interface PixivApiService { //TODO: check filter=for_android
 
-    @GET("/v1/spotlight/articles") //?filter=for_android
+    @GET("/v1/spotlight/articles?filter=for_android")
     suspend fun getPixivisionArticles(
         @Query("category") category: String = "all"
     ): SpotlightResponse
@@ -73,7 +77,7 @@ interface PixivApiService { //TODO: check filter=for_android
     // &include_ranking_label=true&include_ranking_illusts=false
     // &min_bookmark_id_for_recent_illust=4078859313
     // &max_bookmark_id_for_recommend=4068770682&offset=0
-    @GET("/v1/illust/recommended")
+    @GET("/v1/illust/recommended?filter=for_ios&include_ranking_label=true")
     suspend fun getIllustRecommend(
     ): IllustRecommendResponse
 
@@ -82,7 +86,7 @@ interface PixivApiService { //TODO: check filter=for_android
         @Query("content_type") contentType: String? = null //illust manga
     ): IllustNext
 
-    @GET("/v1/illust/ranking") //?filter=for_android
+    @GET("/v1/illust/ranking?filter=for_android")
     suspend fun getIllustRanking(
         @Query("mode") mode: String,
         @Query("date") date: String?
@@ -149,7 +153,7 @@ interface PixivApiService { //TODO: check filter=for_android
         @Query("word") word: String?
     ): TagsListResponse
 
-    @GET("/v1/trending-tags/illust") //?filter=for_android
+    @GET("/v1/trending-tags/illust?filter=for_android")
     suspend fun getIllustTrendTags(
     ): TrendingtagResponse
 
@@ -161,10 +165,12 @@ interface PixivApiService { //TODO: check filter=for_android
         @Query("search_target") search_target: String?,
         @Query("start_date") start_date: String?,
         @Query("end_date") end_date: String?,
-        @Query("bookmark_num") paramInteger: Int?
+        @Query("bookmark_num_min") bookmark_num_min: Int?,
+        @Query("bookmark_num_max") bookmark_num_max: Int? = null,
+        @Query("search_ai_type") search_ai_type: Int? = null
     ): SearchIllustResponse
 
-    @GET("/v1/search/popular-preview/illust?merge_plain_keyword_results=true") //&filter=for_android
+    @GET("/v1/search/popular-preview/illust?include_translated_tag_results=true&merge_plain_keyword_results=true")
     suspend fun getSearchIllustPreview(
         @Query("word") word: String,
         @Query("sort") sort: String,
@@ -173,26 +179,28 @@ interface PixivApiService { //TODO: check filter=for_android
         @Query("duration") duration: String?
     ): SearchIllustResponse
 
-    @GET("/v1/search/popular-preview/illust") //?filter=for_android
+    @GET("/v1/search/popular-preview/illust?include_translated_tag_results=true&merge_plain_keyword_results=true")
     suspend fun getPopularPreviewIllust(
         @Query("word") word: String,
         @Query("search_target") search_target: String,
         @Query("duration") duration: String
     ): TagsListResponse
 
-    @GET("/v1/search/user") //?filter=for_android
+    @GET("/v1/search/user?filter=for_android")
     suspend fun getSearchUser(
         @Query("word") word: String
     ): SearchUserResponse
 
-    @GET("/v1/search/novel")
+    @GET("/v1/search/novel?filter=for_android&merge_plain_keyword_results=true")
     suspend fun getSearchNovel(
         @Query("word") word: String,
         @Query("sort") sort: String,
-        @Query("search_target") search_target: String,
+        @Query("search_target") search_target: String?,
+        @Query("start_date") start_date: String?,
+        @Query("end_date") end_date: String?,
         @Query("bookmark_num") paramInteger: Int?,
-        @Query("duration") duration: String
-    ): ResponseBody
+        @Query("duration") duration: String?
+    ): NovelResponse
 
     @Multipart
     @POST("/v1/user/profile/edit")
@@ -200,28 +208,29 @@ interface PixivApiService { //TODO: check filter=for_android
         @Part paramRequestBody: MultipartBody.Part
     ): ResponseBody
 
-    @GET("/v1/user/recommended") //?filter=for_android
+    @GET("/v1/user/recommended?filter=for_android")
     suspend fun getUserRecommended(
         @Query("offset") offset: Int? = null,
     ): SearchUserResponse
 
-    @GET("/v1/user/follower") //?filter=for_android
+    @GET("/v1/user/follower?filter=for_android")
     suspend fun getUserFollower(
-        @Query("user_id") uid: Int
+        @Query("user_id") uid: Int,
+        @Query("restrict") restrict: String = "public"
     ): SearchUserResponse
 
-    @GET("/v1/user/following") //?filter=for_android
+    @GET("/v1/user/following?filter=for_android")
     suspend fun getUserFollowing(
         @Query("user_id") uid: Int,
         @Query("restrict") restrict: String
     ): SearchUserResponse
 
-    @GET("/v1/user/detail") //?filter=for_android
+    @GET("/v1/user/detail?filter=for_android")
     suspend fun getUserDetail(
         @Query("user_id") id: Int
     ): UserDetail
 
-    @GET("/v1/user/illusts") //?filter=for_android
+    @GET("/v1/user/illusts?filter=for_android")
     suspend fun getUserIllusts(
         @Query("user_id") uid: Int,
         @Query("type") type: String, //illust manga novel
@@ -259,12 +268,12 @@ interface PixivApiService { //TODO: check filter=for_android
     ): ResponseBody
 
 
-    @GET("/v1/illust/detail") //?filter=for_android
+    @GET("/v1/illust/detail?filter=for_android")
     suspend fun getIllust(
         @Query("illust_id") pid: Int
     ): IllustDetailResponse
 
-    @GET("/v2/illust/related") //?filter=for_android
+    @GET("/v2/illust/related?filter=for_android")
     suspend fun getIllustRelated(
         @Query("illust_id") pid: Int
     ): IllustNext
@@ -316,6 +325,43 @@ interface PixivApiService { //TODO: check filter=for_android
         @Query("user_id") uid: Int
     ): NovelResponse
 
+    @GET("/v1/novel/recommended?include_privacy_policy=true&filter=for_android&include_ranking_novels=true")
+    suspend fun getNovelRecommend(
+    ): NovelResponse
+
+    @GET("/v1/novel/ranking?filter=for_android")
+    suspend fun getNovelRanking(
+        @Query("mode") mode: String,
+        @Query("date") date: String? = null
+    ): NovelResponse
+
+    @GET("/v1/novel/follow")
+    suspend fun getNovelFollow(
+        @Query("restrict") restrict: String
+    ): NovelResponse
+
+    @GET("/v1/user/bookmarks/novel")
+    suspend fun getUserBookmarkNovel(
+        @Query("user_id") uid: Int,
+        @Query("restrict") restrict: String
+    ): NovelResponse
+
+    @GET("/v1/trending-tags/novel?filter=for_android")
+    suspend fun getNovelTrendTags(
+    ): NovelTrendingtagResponse
+
+    // 系列内小说列表(响应含 novels + next_url,复用 NovelResponse)
+    @GET("/v2/novel/series")
+    suspend fun getNovelSeries(
+        @Query("series_id") series_id: Int
+    ): NovelResponse
+
+    // /v1/novel/text 纯文本备选:webview 解析失败时 fallback
+    @GET("/v1/novel/text")
+    suspend fun getNovelTextApi(
+        @Query("novel_id") novel_id: Int
+    ): NovelTextResponse
+
     @GET("/v2/novel/detail")
     suspend fun getNovelDetail(
         @Query("novel_id") novel_id: Int
@@ -347,6 +393,70 @@ interface PixivApiService { //TODO: check filter=for_android
         @Path("type") type: String,
         @Field("comment_id") comment_id: Int,
     )
+
+    // ─── 独立设置 / 系列 / watchlist(暂无 UI 消费方,接口+模型就位)──────
+
+    @GET("/v1/user/ai-show-settings")
+    suspend fun getUserAISettings(): UserAISettingsResponse
+
+    @FormUrlEncoded
+    @POST("/v1/user/ai-show-settings/edit")
+    suspend fun postUserAIShowSettings(
+        @Field("show_ai") show_ai: Boolean
+    ): ResponseBody
+
+    @GET("/v1/user/restricted-mode-settings")
+    suspend fun getRestrictedModeSettings(): RestrictedModeSettingsResponse
+
+    @FormUrlEncoded
+    @POST("/v1/user/restricted-mode-settings")
+    suspend fun postRestrictedModeSettings(
+        @Field("is_restricted_mode_enabled") is_restricted_mode_enabled: Boolean
+    ): ResponseBody
+
+    @GET("/v1/manga/recommended?filter=for_ios&include_ranking_label=true")
+    suspend fun getMangaRecommend(): IllustRecommendResponse
+
+    @GET("/v1/illust/series")
+    suspend fun getIllustSeries(
+        @Query("illust_series_id") illust_series_id: Int
+    ): IllustNext
+
+    @GET("/v1/illust-series/illust")
+    suspend fun getIllustSeriesIllust(
+        @Query("illust_id") illust_id: Int
+    ): IllustNext
+
+    // watchlist 响应结构随类型而异且无消费方,返回原始 body
+    @GET("/v1/watchlist/novel")
+    suspend fun getWatchlistNovel(): ResponseBody
+
+    @FormUrlEncoded
+    @POST("/v1/watchlist/novel/add")
+    suspend fun postWatchlistNovelAdd(
+        @Field("series_id") series_id: Int
+    ): ResponseBody
+
+    @FormUrlEncoded
+    @POST("/v1/watchlist/novel/delete")
+    suspend fun postWatchlistNovelDelete(
+        @Field("series_id") series_id: Int
+    ): ResponseBody
+
+    @GET("/v1/watchlist/manga")
+    suspend fun getWatchlistManga(): ResponseBody
+
+    @FormUrlEncoded
+    @POST("/v1/watchlist/manga/add")
+    suspend fun postWatchlistMangaAdd(
+        @Field("series_id") series_id: Int
+    ): ResponseBody
+
+    @FormUrlEncoded
+    @POST("/v1/watchlist/manga/delete")
+    suspend fun postWatchlistMangaDelete(
+        @Field("series_id") series_id: Int
+    ): ResponseBody
 
     @GET
     suspend fun getUrl(

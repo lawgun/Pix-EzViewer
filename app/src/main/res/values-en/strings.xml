@@ -328,4 +328,6 @@
     <string name="novel_font_smaller">Smaller font</string>
     <string name="novel_series_prev">Previous</string>
     <string name="novel_series_next">Next</string>
+    <string name="switch_to_novel">Switch to novel mode</string>
+    <string name="switch_to_illust">Switch to illust mode</string>
 </resources>

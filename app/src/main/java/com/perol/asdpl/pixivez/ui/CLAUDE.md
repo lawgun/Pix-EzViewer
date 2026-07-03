@@ -27,5 +27,5 @@
 | `user/` | 用户主页。 |
 | `manager/` | 下载管理。 |
 | `settings/` | 设置页(含网络/SNI 配置)。 |
-| `MainActivity.kt` | 底部导航宿主。 |
+| `MainActivity.kt` | 底部导航宿主。按 `main_mode` pref 装配 `HelloMainViewPager`(插画)或 `NovelMainViewPager`(小说);抽屉项 `nav_novel_mode` 翻转 pref 后 `recreate()`。 |
 | `FragmentActivity.kt` | 公共 Fragment 宿主基类。 |

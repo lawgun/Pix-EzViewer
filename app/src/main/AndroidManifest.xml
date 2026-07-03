@@ -97,6 +97,7 @@
         <activity
             android:name=".ui.novel.NovelActivity"
             android:theme="@style/AppThemeBase.NoActionBar" />
+        <activity android:name=".ui.novel.NovelSearchResultActivity" />
         <activity android:name=".ui.manager.DownloadManagerActivity" />
         <activity
             android:name=".ui.manager.ImgManagerActivity"

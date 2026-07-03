@@ -326,4 +326,6 @@
     <string name="novel_font_smaller">文字を小さく</string>
     <string name="novel_series_prev">前へ</string>
     <string name="novel_series_next">次へ</string>
+    <string name="switch_to_novel">小説モードへ切り替え</string>
+    <string name="switch_to_illust">イラストモードへ切り替え</string>
 </resources>
