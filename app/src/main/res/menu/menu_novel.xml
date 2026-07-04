@@ -26,6 +26,14 @@
         android:title="@string/novel_series_next"
         app:showAsAction="never" />
     <item
+        android:id="@+id/action_novel_bg"
+        android:title="@string/novel_background"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_novel_line_space"
+        android:title="@string/novel_line_space"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/action_novel_share"
         android:icon="@drawable/ic_action_share"
         android:title="@string/share"

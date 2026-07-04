@@ -25,6 +25,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.perol.asdpl.pixivez.IntentActivity
 import com.perol.asdpl.pixivez.R
 import com.perol.asdpl.pixivez.base.RinkActivity
@@ -64,9 +65,27 @@ class NovelActivity : RinkActivity() {
         textSize = PxEZApp.instance.pre.getFloat(PREF_TEXT_SIZE, DEFAULT_TEXT_SIZE)
         adapter.textSize = textSize
         binding.novelRecycler.adapter = adapter
+        applyReaderTheme()
 
         initObserver()
         viewModel.load(novelId)
+    }
+
+    // 背景主题:(背景色, 正文色);0=跟随主题走 XML/theme 默认
+    private val bgThemes = listOf(
+        0 to null,                                // follow(不覆盖)
+        0xFFFAF7EF.toInt() to 0xFF333333.toInt(), // paper
+        0xFFF0E4CC.toInt() to 0xFF5B4636.toInt(), // sepia
+        0xFF000000.toInt() to 0xFFB0B0B0.toInt(), // black
+    )
+
+    private fun applyReaderTheme() {
+        val bg = PxEZApp.instance.pre.getInt("novel_bg", 0)
+        val (color, textColor) = bgThemes.getOrElse(bg) { bgThemes[0] }
+        if (bg != 0) binding.root.setBackgroundColor(color)
+        adapter.chunkTextColor = textColor
+        adapter.lineSpacing = PxEZApp.instance.pre.getFloat("novel_line_space", 1.4f)
+        adapter.notifyItemRangeChanged(1, adapter.chunks.size)
     }
 
     @SuppressLint("NotifyDataSetChanged")
@@ -125,6 +144,35 @@ class NovelActivity : RinkActivity() {
             R.id.action_novel_font_smaller -> changeFont(-2f)
             R.id.action_novel_prev -> prev?.let(::openNovel)
             R.id.action_novel_next -> next?.let(::openNovel)
+            R.id.action_novel_bg -> {
+                val labels = arrayOf(
+                    getString(R.string.novel_bg_follow), getString(R.string.novel_bg_paper),
+                    getString(R.string.novel_bg_sepia), getString(R.string.novel_bg_black)
+                )
+                val cur = PxEZApp.instance.pre.getInt("novel_bg", 0)
+                MaterialAlertDialogBuilder(this)
+                    .setTitle(R.string.novel_background)
+                    .setSingleChoiceItems(labels, cur) { d, i ->
+                        PxEZApp.instance.pre.edit().putInt("novel_bg", i).apply()
+                        d.dismiss()
+                        // 跟随主题需要清掉已染的背景,直接重建最干净
+                        recreate()
+                    }.show()
+            }
+            R.id.action_novel_line_space -> {
+                val values = floatArrayOf(1.2f, 1.4f, 1.8f)
+                val labels = arrayOf("1.2", "1.4", "1.8")
+                val cur = values.indexOfFirst {
+                    it == PxEZApp.instance.pre.getFloat("novel_line_space", 1.4f)
+                }.coerceAtLeast(0)
+                MaterialAlertDialogBuilder(this)
+                    .setTitle(R.string.novel_line_space)
+                    .setSingleChoiceItems(labels, cur) { d, i ->
+                        PxEZApp.instance.pre.edit().putFloat("novel_line_space", values[i]).apply()
+                        applyReaderTheme()
+                        d.dismiss()
+                    }.show()
+            }
             R.id.action_novel_share -> share()
             else -> return super.onOptionsItemSelected(item)
         }
@@ -191,6 +239,10 @@ private class NovelReaderAdapter(
     var chunks: List<NovelChunk> = emptyList()
     var textSize: Float = 16f
 
+    // 背景主题联动的正文颜色/行距;null = 跟随 XML 默认
+    var chunkTextColor: Int? = null
+    var lineSpacing: Float = 1.4f
+
     override fun getItemViewType(position: Int) = when {
         position == 0 -> TYPE_HEADER
         chunks[position - 1] is NovelChunk.Image -> TYPE_IMAGE
@@ -216,6 +268,8 @@ private class NovelReaderAdapter(
             is ViewNovelImageBinding -> bindImage(b, chunks[position - 1] as NovelChunk.Image)
             is ViewNovelChunkBinding -> {
                 b.novelChunk.textSize = textSize
+                b.novelChunk.setLineSpacing(0f, lineSpacing)
+                chunkTextColor?.let { b.novelChunk.setTextColor(it) }
                 // 复用后的可选中 TextView 长按会失灵,重置一次可选中态恢复
                 b.novelChunk.setTextIsSelectable(false)
                 b.novelChunk.text = renderSpans((chunks[position - 1] as NovelChunk.Text).text)
