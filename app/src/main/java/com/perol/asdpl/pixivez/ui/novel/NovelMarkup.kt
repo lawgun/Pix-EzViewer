@@ -62,3 +62,35 @@ private fun splitByParagraph(page: String): List<String> {
     if (sb.isNotBlank()) chunks += sb.toString().trim()
     return chunks
 }
+
+// Text 块 bind 时的行内标记;Ruby 显示为 base(rt),Jump* 转 ClickableSpan
+sealed class NovelToken {
+    data class Plain(val text: String) : NovelToken()
+    data class Chapter(val title: String) : NovelToken()
+    data class Ruby(val base: String, val rt: String) : NovelToken()
+    data class JumpUri(val title: String, val url: String) : NovelToken()
+    data class JumpPage(val page: Int) : NovelToken()
+}
+
+private val TOKEN_MARK = Regex(
+    """\[chapter:(.*?)]|\[\[rb:(.*?)>(.*?)]]|\[\[jumpuri:(.*?)>(.*?)]]|\[jump:(\d+)]""",
+    RegexOption.DOT_MATCHES_ALL
+)
+
+fun tokenize(text: String): List<NovelToken> {
+    val tokens = mutableListOf<NovelToken>()
+    var last = 0
+    for (m in TOKEN_MARK.findAll(text)) {
+        if (m.range.first > last) tokens += NovelToken.Plain(text.substring(last, m.range.first))
+        val g = m.groups
+        tokens += when {
+            g[1] != null -> NovelToken.Chapter(g[1]!!.value.trim())
+            g[2] != null -> NovelToken.Ruby(g[2]!!.value, g[3]?.value ?: "")
+            g[4] != null -> NovelToken.JumpUri(g[4]!!.value.trim(), g[5]?.value?.trim() ?: "")
+            else -> NovelToken.JumpPage(g[6]!!.value.toInt())
+        }
+        last = m.range.last + 1
+    }
+    if (last < text.length) tokens += NovelToken.Plain(text.substring(last))
+    return tokens
+}

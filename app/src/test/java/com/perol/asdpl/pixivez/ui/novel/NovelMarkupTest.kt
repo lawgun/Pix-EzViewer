@@ -55,4 +55,26 @@ class NovelMarkupTest {
         assertEquals(3, c.size)
         assertTrue(c[1] is NovelChunk.Image)
     }
+
+    @Test fun tokenize_plain_only() {
+        assertEquals(listOf(NovelToken.Plain("纯文本")), tokenize("纯文本"))
+    }
+
+    @Test fun tokenize_all_marker_kinds() {
+        val t = tokenize("A[chapter:章]B[[rb:漢>かん]]C[[jumpuri:标>https://e.x]]D[jump:3]E")
+        assertEquals(
+            listOf(
+                NovelToken.Plain("A"), NovelToken.Chapter("章"),
+                NovelToken.Plain("B"), NovelToken.Ruby("漢", "かん"),
+                NovelToken.Plain("C"), NovelToken.JumpUri("标", "https://e.x"),
+                NovelToken.Plain("D"), NovelToken.JumpPage(3),
+                NovelToken.Plain("E"),
+            ),
+            t
+        )
+    }
+
+    @Test fun tokenize_keeps_malformed_marker_as_plain() {
+        assertEquals(listOf(NovelToken.Plain("[chapter:未闭合")), tokenize("[chapter:未闭合"))
+    }
 }
