@@ -28,7 +28,6 @@ package com.perol.asdpl.pixivez.ui.search
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.app.ActivityOptions
-import android.content.Intent
 import android.os.Bundle
 import android.util.Pair
 import android.view.LayoutInflater
@@ -183,11 +182,7 @@ class TrendTagFragment : Fragment() {
     }
 
     private fun upToPage(query: String) {
-        val bundle = Bundle()
         val nameQuery = query.split('|')[0]
-        bundle.putString("keyword", nameQuery)
-        val intent = Intent(requireActivity(), SearchResultActivity::class.java)
-        intent.putExtras(bundle)
-        startActivityForResult(intent, 775)
+        SearchRouter.startWordSearch(requireActivity(), nameQuery)
     }
 }

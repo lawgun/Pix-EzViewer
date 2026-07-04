@@ -42,7 +42,6 @@ import com.perol.asdpl.pixivez.base.RinkActivity
 import com.perol.asdpl.pixivez.databinding.ActivitySearchBinding
 import com.perol.asdpl.pixivez.services.PxEZApp
 import com.perol.asdpl.pixivez.ui.novel.NovelActivity
-import com.perol.asdpl.pixivez.ui.novel.NovelSearchResultActivity
 import com.perol.asdpl.pixivez.ui.pic.PictureActivity
 import com.perol.asdpl.pixivez.ui.user.UserMActivity
 
@@ -204,15 +203,6 @@ class SearchActivity : RinkActivity() {
     }
 
     private fun searchFor(query: String) {
-        // 小说模式走轻量小说结果页,插画模式走既有 tab 结果页
-        if (novelMode) {
-            NovelSearchResultActivity.start(this, query)
-            return
-        }
-        val bundle = Bundle()
-        bundle.putString("keyword", query)
-        val intent = Intent(this, SearchResultActivity::class.java)
-        intent.putExtras(bundle)
-        startActivityForResult(intent, 775)
+        SearchRouter.startWordSearch(this, query)
     }
 }

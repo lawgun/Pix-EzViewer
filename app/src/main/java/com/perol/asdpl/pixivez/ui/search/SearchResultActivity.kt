@@ -25,7 +25,6 @@
 
 package com.perol.asdpl.pixivez.ui.search
 
-import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
@@ -39,16 +38,6 @@ import com.perol.asdpl.pixivez.objects.UpToTopListener
 import com.perol.asdpl.pixivez.ui.FragmentActivity
 
 class SearchResultActivity : RinkActivity() {
-    companion object {
-        fun start(context: Context, keyword: String, type: Int = 0) {
-            val intent =
-                Intent(context, SearchResultActivity::class.java).setAction("search.result")
-            intent.putExtra("keyword", keyword)
-            intent.putExtra("type", type)
-            context.startActivity(intent)
-        }
-    }
-
     private var keyword: String = ""
     var type: Int = 0
 

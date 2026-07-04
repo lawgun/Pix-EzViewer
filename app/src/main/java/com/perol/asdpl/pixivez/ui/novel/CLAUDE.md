@@ -10,9 +10,13 @@
 
 `main_mode` pref("illust"/"novel",`PxEZApp.instance.pre`)决定 MainActivity
 装配哪个 pager:`NovelMainViewPager` 或 `HelloMainViewPager`。抽屉项
-`nav_novel_mode` 翻转 pref 后 `recreate()` 重装;三个 tab 图标(home/rank/user)
-两模式共用,语义上对应 推荐/排行/动态。搜索入口(SearchActivity)按 `main_mode`
-路由:novel 模式落地 `NovelSearchResultActivity`。
+`nav_novel_mode` 翻转 pref 后 `finish() + startActivity` 全新实例重装——
+不能用 `recreate()`:其 savedInstanceState 会让 FragmentPagerAdapter 按
+tag(两模式相同,默认 itemId=position)复用旧模式 fragment。三个 tab 图标
+(home/rank/user)两模式共用,语义上对应 推荐/排行/动态。所有按词搜索
+统一走 `ui/search/SearchRouter.startWordSearch` 按 `main_mode` 分派:
+novel 模式落地 `NovelSearchResultActivity`,illust 模式落地
+`SearchResultActivity`(带 775 回传契约);新增搜索入口必须走它。
 
 ## 文件职责
 

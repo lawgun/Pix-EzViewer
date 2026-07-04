@@ -75,7 +75,7 @@ import com.perol.asdpl.pixivez.ui.novel.NovelMainViewPager
 import com.perol.asdpl.pixivez.ui.manager.ImgManagerActivity
 import com.perol.asdpl.pixivez.ui.pic.PictureActivity
 import com.perol.asdpl.pixivez.ui.search.SearchActivity
-import com.perol.asdpl.pixivez.ui.search.SearchResultActivity
+import com.perol.asdpl.pixivez.ui.search.SearchRouter
 import com.perol.asdpl.pixivez.ui.settings.SaucenaoActivity
 import com.perol.asdpl.pixivez.ui.settings.SettingsActivity
 import com.perol.asdpl.pixivez.ui.user.UserMActivity
@@ -189,7 +189,11 @@ class MainActivity : RinkActivity(), NavigationView.OnNavigationItemSelectedList
                 PxEZApp.instance.pre.edit {
                     putString("main_mode", if (cur == "novel") "illust" else "novel")
                 }
-                recreate()
+                // 模式切换必须全新实例:recreate() 的 savedInstanceState 会让
+                // FragmentPagerAdapter 按 tag 复用旧模式 fragment(两模式 tag 相同)
+                finish()
+                startActivity(Intent(this, MainActivity::class.java))
+                overridePendingTransition(0, 0)
             }
 
             R.id.nav_search_pic -> {
@@ -386,7 +390,7 @@ class MainActivity : RinkActivity(), NavigationView.OnNavigationItemSelectedList
                             if ((item).toIntOrNull() != null) {
                                 PictureActivity.start(this@MainActivity, item.toInt())
                             } else {
-                                SearchResultActivity.start(this@MainActivity, item, 1)
+                                SearchRouter.startWordSearch(this@MainActivity, item, 1)
                             }
                         }
                         cancelButton()

@@ -1,6 +1,5 @@
 package com.perol.asdpl.pixivez.ui.search
 
-import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -13,8 +12,6 @@ import com.chad.brvah.viewholder.BaseViewHolder
 import com.perol.asdpl.pixivez.R
 import com.perol.asdpl.pixivez.data.model.Tag
 import com.perol.asdpl.pixivez.databinding.FragmentSearchSuggestionsBinding
-import com.perol.asdpl.pixivez.services.PxEZApp
-import com.perol.asdpl.pixivez.ui.novel.NovelSearchResultActivity
 
 /**
  * A placeholder fragment containing a simple view.
@@ -49,16 +46,7 @@ class SearchSuggestionFragment : Fragment() {
         tagsTextAdapter.setOnItemClickListener { adapter, view, position ->
             val tag = searchSuggestionViewModel.autoCompleteTags.value!![position]
             searchSuggestionViewModel.addHistory(tag)
-            // 小说模式走轻量小说结果页,插画模式走既有 tab 结果页
-            if (PxEZApp.instance.pre.getString("main_mode", "illust") == "novel") {
-                NovelSearchResultActivity.start(requireActivity(), tag.name)
-            } else {
-                val bundle = Bundle()
-                bundle.putString("keyword", tag.name)
-                val intent = Intent(requireActivity(), SearchResultActivity::class.java)
-                intent.putExtras(bundle)
-                startActivityForResult(intent, 775)
-            }
+            SearchRouter.startWordSearch(requireActivity(), tag.name)
         }
         binding.advices.visibility = View.GONE
         searchSuggestionViewModel.autoCompleteTags.observe(viewLifecycleOwner) {
