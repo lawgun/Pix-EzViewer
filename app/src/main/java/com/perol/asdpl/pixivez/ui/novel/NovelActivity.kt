@@ -3,14 +3,28 @@ package com.perol.asdpl.pixivez.ui.novel
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.graphics.Typeface
 import android.os.Bundle
+import android.text.Layout
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.method.LinkMovementMethod
+import android.text.style.AlignmentSpan
+import android.text.style.ClickableSpan
+import android.text.style.RelativeSizeSpan
+import android.text.style.StyleSpan
 import android.view.LayoutInflater
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.view.ViewGroup
 import androidx.activity.viewModels
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
+import com.bumptech.glide.Glide
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions.withCrossFade
+import com.perol.asdpl.pixivez.IntentActivity
 import com.perol.asdpl.pixivez.R
 import com.perol.asdpl.pixivez.base.RinkActivity
 import com.perol.asdpl.pixivez.data.model.Novel
@@ -18,13 +32,16 @@ import com.perol.asdpl.pixivez.data.model.NovelNaviItem
 import com.perol.asdpl.pixivez.databinding.ActivityNovelBinding
 import com.perol.asdpl.pixivez.databinding.ViewNovelChunkBinding
 import com.perol.asdpl.pixivez.databinding.ViewNovelHeaderBinding
+import com.perol.asdpl.pixivez.databinding.ViewNovelImageBinding
 import com.perol.asdpl.pixivez.services.PxEZApp
+import com.perol.asdpl.pixivez.ui.pic.PictureActivity
 
-// 小说阅读页:头部(标题/作者/标签)+ 分块正文,字号记忆、收藏 toggle、系列上/下一篇
+// 小说阅读页:头部(标题/作者/标签)+ 图文分块正文(标记渲染见 NovelMarkup),
+// 字号记忆、收藏 toggle、系列上/下一篇
 class NovelActivity : RinkActivity() {
     private lateinit var binding: ActivityNovelBinding
     private val viewModel: NovelViewModel by viewModels()
-    private val adapter = NovelReaderAdapter()
+    private val adapter = NovelReaderAdapter(onJumpToPage = ::scrollToPage)
     private var novelId: Int = 0
     private var prev: NovelNaviItem? = null
     private var next: NovelNaviItem? = null
@@ -100,6 +117,14 @@ class NovelActivity : RinkActivity() {
         PxEZApp.instance.pre.edit().putFloat(PREF_TEXT_SIZE, textSize).apply()
     }
 
+    // [jump:N] N 为 1 起页号;目标 = 首个 page==N-1 的块(header 占位 +1)
+    private fun scrollToPage(page: Int) {
+        val idx = adapter.chunks.indexOfFirst { it.page == page - 1 }
+        if (idx < 0) return
+        (binding.novelRecycler.layoutManager as LinearLayoutManager)
+            .scrollToPositionWithOffset(1 + idx, 0)
+    }
+
     private fun openNovel(item: NovelNaviItem) {
         if (!item.viewable) return
         start(this, item.id)
@@ -134,53 +159,116 @@ class NovelActivity : RinkActivity() {
     }
 }
 
-// 正文分块适配器:position 0 = 头部,之后每项一块正文。
-// 块级懒渲染让 TextView 测量摊到滚动过程,长文不再整篇阻塞主线程
-private class NovelReaderAdapter : RecyclerView.Adapter<NovelReaderAdapter.VH>() {
+// 正文分块适配器:0=头部,其后 Text/Image 两种块。
+// Text 块 bind 时 tokenize→Spannable,测量摊到滚动过程,长文不阻塞主线程
+private class NovelReaderAdapter(
+    private val onJumpToPage: (Int) -> Unit
+) : RecyclerView.Adapter<NovelReaderAdapter.VH>() {
     class VH(val binding: ViewBinding) : RecyclerView.ViewHolder(binding.root)
 
     var novel: Novel? = null
-    var chunks: List<String> = emptyList()
+    var chunks: List<NovelChunk> = emptyList()
     var textSize: Float = 16f
 
-    override fun getItemViewType(position: Int) =
-        if (position == 0) TYPE_HEADER else TYPE_CHUNK
+    override fun getItemViewType(position: Int) = when {
+        position == 0 -> TYPE_HEADER
+        chunks[position - 1] is NovelChunk.Image -> TYPE_IMAGE
+        else -> TYPE_CHUNK
+    }
 
     override fun getItemCount() = 1 + chunks.size
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
         val inflater = LayoutInflater.from(parent.context)
         return VH(
-            if (viewType == TYPE_HEADER) {
-                ViewNovelHeaderBinding.inflate(inflater, parent, false)
-            } else {
-                ViewNovelChunkBinding.inflate(inflater, parent, false)
+            when (viewType) {
+                TYPE_HEADER -> ViewNovelHeaderBinding.inflate(inflater, parent, false)
+                TYPE_IMAGE -> ViewNovelImageBinding.inflate(inflater, parent, false)
+                else -> ViewNovelChunkBinding.inflate(inflater, parent, false)
             }
         )
     }
 
-    @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: VH, position: Int) {
         when (val b = holder.binding) {
-            is ViewNovelHeaderBinding -> {
-                val n = novel ?: return
-                b.novelTitle.text = n.title
-                b.novelAuthor.text = n.user.name
-                b.novelMeta.text = "${n.text_length} · ♥ ${n.total_bookmarks}"
-                b.novelTags.text = n.tags.joinToString(" ") { "#${it.name}" }
-            }
+            is ViewNovelHeaderBinding -> bindHeader(b)
+            is ViewNovelImageBinding -> bindImage(b, chunks[position - 1] as NovelChunk.Image)
             is ViewNovelChunkBinding -> {
                 b.novelChunk.textSize = textSize
                 // 复用后的可选中 TextView 长按会失灵,重置一次可选中态恢复
                 b.novelChunk.setTextIsSelectable(false)
-                b.novelChunk.text = chunks[position - 1]
+                b.novelChunk.text = renderSpans((chunks[position - 1] as NovelChunk.Text).text)
                 b.novelChunk.setTextIsSelectable(true)
+                // 选中态之后设 movementMethod,链接与长按选择并存
+                b.novelChunk.movementMethod = LinkMovementMethod.getInstance()
             }
         }
+    }
+
+    @SuppressLint("SetTextI18n")
+    private fun bindHeader(b: ViewNovelHeaderBinding) {
+        val n = novel ?: return
+        b.novelTitle.text = n.title
+        b.novelAuthor.text = n.user.name
+        b.novelMeta.text = "${n.text_length} · ♥ ${n.total_bookmarks}"
+        b.novelTags.text = n.tags.joinToString(" ") { "#${it.name}" }
+    }
+
+    private fun bindImage(b: ViewNovelImageBinding, chunk: NovelChunk.Image) {
+        if (chunk.url == null) {
+            // url 未解析:显示原始标记占位,不阻塞正文
+            b.novelImage.visibility = View.GONE
+            b.novelImageFallback.visibility = View.VISIBLE
+            b.novelImageFallback.text =
+                chunk.illustId?.let { "[pixivimage:$it]" } ?: "[uploadedimage]"
+        } else {
+            b.novelImage.visibility = View.VISIBLE
+            b.novelImageFallback.visibility = View.GONE
+            Glide.with(b.novelImage).load(chunk.url)
+                .transition(withCrossFade()).into(b.novelImage)
+        }
+        b.root.setOnClickListener {
+            chunk.illustId?.let { id -> PictureActivity.start(b.root.context, id) }
+        }
+    }
+
+    // token → Spannable:chapter 加粗放大居中,ruby 括注,jumpuri/jump 可点
+    private fun renderSpans(text: String): CharSequence {
+        val sb = SpannableStringBuilder()
+        for (t in tokenize(text)) when (t) {
+            is NovelToken.Plain -> sb.append(t.text)
+            is NovelToken.Ruby -> sb.append("${t.base}(${t.rt})")
+            is NovelToken.Chapter -> {
+                val start = sb.length
+                sb.append("\n${t.title}\n")
+                sb.setSpan(StyleSpan(Typeface.BOLD), start, sb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                sb.setSpan(RelativeSizeSpan(1.25f), start, sb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+                sb.setSpan(
+                    AlignmentSpan.Standard(Layout.Alignment.ALIGN_CENTER),
+                    start, sb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+            }
+            is NovelToken.JumpUri -> {
+                val start = sb.length
+                sb.append(t.title.ifBlank { t.url })
+                sb.setSpan(object : ClickableSpan() {
+                    override fun onClick(widget: View) = IntentActivity.start(widget.context, t.url)
+                }, start, sb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+            is NovelToken.JumpPage -> {
+                val start = sb.length
+                sb.append("▶ P${t.page}")
+                sb.setSpan(object : ClickableSpan() {
+                    override fun onClick(widget: View) = onJumpToPage(t.page)
+                }, start, sb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            }
+        }
+        return sb
     }
 
     companion object {
         private const val TYPE_HEADER = 0
         private const val TYPE_CHUNK = 1
+        private const val TYPE_IMAGE = 2
     }
 }

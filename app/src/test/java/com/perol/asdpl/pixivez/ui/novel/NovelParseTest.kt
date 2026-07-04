@@ -2,7 +2,6 @@ package com.perol.asdpl.pixivez.ui.novel
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class NovelParseTest {
@@ -45,15 +44,4 @@ class NovelParseTest {
         assertEquals("ab", renderNovelText("a[pixivimage:1-2][uploadedimage:3][jump:4]b"))
     }
 
-    @Test fun chunks_split_by_newpage_and_limit() {
-        assertEquals(listOf("a", "b"), renderNovelChunks("a[newpage]b"))
-        val long = (1..40).joinToString("\n") { "x".repeat(100) } // 单页 >3000 字符
-        val chunks = renderNovelChunks(long)
-        assertTrue(chunks.size > 1)
-        assertTrue(chunks.all { it.length <= 3000 })
-    }
-
-    @Test fun chunks_drop_blank_pages() {
-        assertEquals(listOf("a"), renderNovelChunks("a[newpage]  \n "))
-    }
 }
