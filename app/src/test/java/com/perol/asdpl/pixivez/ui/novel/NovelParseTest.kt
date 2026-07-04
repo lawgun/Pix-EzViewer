@@ -1,0 +1,49 @@
+package com.perol.asdpl.pixivez.ui.novel
+
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import org.junit.Test
+
+class NovelParseTest {
+    // 模拟 /webview/v2/novel HTML 内嵌 JSON(锚点:novel: {...}, isOwnWork)
+    private val html = """
+        <html><script>pixiv.novel = { novel: {"id":"123","title":"T",
+        "text":"第一页[newpage]第二页","seriesNavigation":{
+        "prevNovel":{"id":1,"viewable":true,"title":"p"},"nextNovel":null}},
+        isOwnWork: false };</script></html>
+    """.trimIndent()
+
+    @Test fun parse_extracts_text_and_series() {
+        val web = parseWebNovel(html)!!
+        assertEquals("123", web.id)
+        assertEquals("第一页[newpage]第二页", web.text)
+        assertEquals(1, web.seriesNavigation?.prevNovel?.id)
+        assertNull(web.seriesNavigation?.nextNovel)
+    }
+
+    @Test fun parse_returns_null_without_anchor() {
+        assertNull(parseWebNovel("<html>no embedded json</html>"))
+    }
+
+    @Test fun render_text_transforms_all_markers() {
+        assertEquals(
+            "\n标题\n汉字(かんじ)链接",
+            renderNovelText("[chapter:标题][[rb:汉字>かんじ]][[jumpuri:链接>https://x.example]]")
+        )
+        assertEquals("a\n\nb", renderNovelText("a[newpage]b"))
+        assertEquals("ab", renderNovelText("a[pixivimage:1-2][uploadedimage:3][jump:4]b"))
+    }
+
+    @Test fun chunks_split_by_newpage_and_limit() {
+        assertEquals(listOf("a", "b"), renderNovelChunks("a[newpage]b"))
+        val long = (1..40).joinToString("\n") { "x".repeat(100) } // 单页 >3000 字符
+        val chunks = renderNovelChunks(long)
+        assertTrue(chunks.size > 1)
+        assertTrue(chunks.all { it.length <= 3000 })
+    }
+
+    @Test fun chunks_drop_blank_pages() {
+        assertEquals(listOf("a"), renderNovelChunks("a[newpage]  \n "))
+    }
+}
