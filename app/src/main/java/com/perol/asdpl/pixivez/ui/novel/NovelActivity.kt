@@ -49,6 +49,9 @@ class NovelActivity : RinkActivity() {
     private var next: NovelNaviItem? = null
     private var textSize: Float = DEFAULT_TEXT_SIZE
 
+    // 进度恢复只在首次数据就绪时执行一次
+    private var progressRestored = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityNovelBinding.inflate(layoutInflater)
@@ -76,12 +79,28 @@ class NovelActivity : RinkActivity() {
         viewModel.chunks.observe(this) {
             adapter.chunks = it.orEmpty()
             adapter.notifyDataSetChanged()
+            if (!progressRestored && !it.isNullOrEmpty()) {
+                progressRestored = true
+                NovelProgressStore.load(novelId)?.let { p ->
+                    (binding.novelRecycler.layoutManager as LinearLayoutManager)
+                        .scrollToPositionWithOffset(p.position, p.offset)
+                }
+            }
         }
         viewModel.web.observe(this) { web ->
             prev = web?.seriesNavigation?.prevNovel
             next = web?.seriesNavigation?.nextNovel
             invalidateOptionsMenu()
         }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        val lm = binding.novelRecycler.layoutManager as LinearLayoutManager
+        val pos = lm.findFirstVisibleItemPosition()
+        if (pos <= 0 || adapter.chunks.isEmpty()) return // header 处/未加载不记
+        val offset = lm.findViewByPosition(pos)?.top ?: 0
+        NovelProgressStore.save(novelId, pos, offset)
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
