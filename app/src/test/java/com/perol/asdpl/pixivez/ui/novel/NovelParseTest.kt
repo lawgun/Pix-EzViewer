@@ -26,6 +26,16 @@ class NovelParseTest {
         assertNull(parseWebNovel("<html>no embedded json</html>"))
     }
 
+    @Test fun parse_resolves_image_maps() {
+        val h = """x novel: {"id":"9","text":"t",
+            "images":{"77":{"urls":{"480mw":"https://i.pximg.net/u480.jpg","original":"https://i.pximg.net/uo.jpg"}}},
+            "illusts":{"55":{"illust":{"images":{"medium":"https://i.pximg.net/m.jpg"}}}}},
+            isOwnWork: true"""
+        val web = parseWebNovel(h)!!
+        assertEquals("https://i.pximg.net/u480.jpg", web.images?.get("77")?.urls?.mw480)
+        assertEquals("https://i.pximg.net/m.jpg", web.illusts?.get("55")?.illust?.images?.medium)
+    }
+
     @Test fun render_text_transforms_all_markers() {
         assertEquals(
             "\n标题\n汉字(かんじ)链接",
