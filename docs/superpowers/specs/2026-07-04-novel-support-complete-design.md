@@ -15,12 +15,12 @@ API 层近乎完整:评论(get/add)、系列、趋势标签、watchlist 端点�
 导出、watchlist 入口。确认非缺口:novel related(App-API 无此端点,
 pixez 也没有)。
 
-## 假设(用户暂离未确认,开工前需拍板)
+## 假设与已确认事实
 
-1. **"视图未对接"的分歧**:按"功能太单薄 + 从未真机验证"双保险处理——
-   Phase 0 先真机冒烟,若发现 wiring 实际损坏则修复优先级置顶。
-2. **范围**:阅读体验/详情生态/搜索发现/本地能力 四面全做,
-   按下述 Phase 顺序交付,用户可砍任意 Phase。
+1. **wiring 确认损坏(用户真机复现,根因已定位)**:切换 novel 模式后
+   三 tab 与搜索仍展示插画,两个独立 bug,见 Phase 0。修复置顶。
+2. **范围假设(待用户确认)**:阅读体验/详情生态/搜索发现/本地能力
+   四面全做,按下述 Phase 顺序交付,用户可砍任意 Phase。
 
 ## 目标
 
@@ -46,15 +46,34 @@ pixez 也没有)。
 
 每个 Phase 独立分支 → CI 绿 → 合入,互不阻塞后续讨论。
 
-### Phase 0 — 真机冒烟 + parseWebNovel 单测
+### Phase 0 — 修复模式切换 wiring + 真机冒烟 + parseWebNovel 单测
 
-- 装最新 CI 产物,过:模式切换 → 三 tab 加载 → 排行子 tab → 搜索 →
-  阅读页(重点:正文是否渲染,即 `parseWebNovel` 是否真能抽出 JSON)→
-  收藏 → 系列上下篇 → 用户页小说 tab。
-- 抓一份真实 `/webview/v2/novel` HTML 作 fixture,补 `parseWebNovel` /
-  `renderNovelChunks` / `renderNovelText` 单测(`app/src/test`)。
-- 发现的 wiring bug 就地修。
-- 验收:冒烟清单全绿 + 单测过 CI。
+真机已复现两个 wiring bug,根因均已定位(2026-07-04):
+
+- **Bug 1:切换后三 tab 仍是插画**。`nav_novel_mode` 用 `recreate()`
+  重装,但 recreate 会经 savedInstanceState 恢复 FragmentManager 里的旧
+  fragment;`FragmentPagerAdapter.instantiateItem` 按 tag
+  `android:switcher:<containerId>:<itemId>` 复用已有 fragment,两个 pager
+  共用容器 `R.id.contentView` 且都是默认 `getItemId()`(=position),
+  tag 完全相同 → 恢复的旧模式 fragment 被复用,新 pager 的 `getItem()`
+  永不执行。**修复:切换不走 `recreate()`,改
+  `finish() + startActivity(MainActivity)`**——新实例无
+  savedInstanceState,装配天然干净;无需 itemId 特判、无需清理
+  stale fragment(消除特殊情况而非对抗它)。主题/系统触发的常规
+  recreate 同模式恢复 tag 匹配,不受影响。
+- **Bug 2:搜索仍是插画(部分入口)**。novelMode 路由只覆盖
+  `SearchActivity.searchFor`(键盘提交)与 SearchSuggestionFragment
+  (联想词);`TrendTagFragment.upToPage`(趋势标签/历史点击)与
+  MainActivity 剪贴板搜索对话框直启插画 `SearchResultActivity`。
+  **修复:收敛为单一路由入口**(companion `SearchRouter` 或
+  `SearchResultActivity.start` 内按 `main_mode` 分派),四处调用点
+  全走它,消除重复分支,杜绝未来新入口再漏。
+- 补 `parseWebNovel` / `renderNovelChunks` / `renderNovelText` 单测
+  (真实 `/webview/v2/novel` HTML fixture,`app/src/test`)。
+- 真机冒烟:模式往返切换 → 三 tab 内容正确 → 排行子 tab → 趋势标签/
+  历史/键盘提交三路搜索 → 阅读页正文渲染 → 收藏 → 系列上下篇 →
+  用户页小说 tab。
+- 验收:冒烟清单全绿 + 单测过 CI。wiring 修复可先行单独合入。
 
 ### Phase 1 — 阅读页体验闭环
 
