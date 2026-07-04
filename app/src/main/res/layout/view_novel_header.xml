@@ -35,6 +35,25 @@
         tools:text="1234 · ♥ 56" />
 
     <TextView
+        android:id="@+id/novel_series"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:textSize="13sp"
+        android:textStyle="italic"
+        android:visibility="gone"
+        tools:text="系列:xxx" />
+
+    <TextView
+        android:id="@+id/novel_caption"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:textSize="14sp"
+        android:visibility="gone"
+        tools:text="简介" />
+
+    <TextView
         android:id="@+id/novel_tags"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

@@ -19,6 +19,7 @@ import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import androidx.activity.viewModels
+import androidx.core.text.HtmlCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.viewbinding.ViewBinding
@@ -35,6 +36,7 @@ import com.perol.asdpl.pixivez.databinding.ViewNovelHeaderBinding
 import com.perol.asdpl.pixivez.databinding.ViewNovelImageBinding
 import com.perol.asdpl.pixivez.services.PxEZApp
 import com.perol.asdpl.pixivez.ui.pic.PictureActivity
+import com.perol.asdpl.pixivez.ui.user.UserMActivity
 
 // 小说阅读页:头部(标题/作者/标签)+ 图文分块正文(标记渲染见 NovelMarkup),
 // 字号记忆、收藏 toggle、系列上/下一篇
@@ -210,8 +212,27 @@ private class NovelReaderAdapter(
         val n = novel ?: return
         b.novelTitle.text = n.title
         b.novelAuthor.text = n.user.name
+        b.novelAuthor.setOnClickListener {
+            UserMActivity.start(b.root.context, n.user.id)
+        }
         b.novelMeta.text = "${n.text_length} · ♥ ${n.total_bookmarks}"
-        b.novelTags.text = n.tags.joinToString(" ") { "#${it.name}" }
+        b.novelSeries.visibility = if (n.series != null) View.VISIBLE else View.GONE
+        b.novelSeries.text = n.series?.title
+        b.novelCaption.visibility = if (n.caption.isBlank()) View.GONE else View.VISIBLE
+        b.novelCaption.text = HtmlCompat.fromHtml(n.caption, HtmlCompat.FROM_HTML_MODE_LEGACY)
+        // 每个标签一段 ClickableSpan → 小说搜索
+        val sb = SpannableStringBuilder()
+        for (tag in n.tags) {
+            if (sb.isNotEmpty()) sb.append("  ")
+            val start = sb.length
+            sb.append("#${tag.name}")
+            sb.setSpan(object : ClickableSpan() {
+                override fun onClick(widget: View) =
+                    NovelSearchResultActivity.start(widget.context, tag.name)
+            }, start, sb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
+        b.novelTags.text = sb
+        b.novelTags.movementMethod = LinkMovementMethod.getInstance()
     }
 
     private fun bindImage(b: ViewNovelImageBinding, chunk: NovelChunk.Image) {
