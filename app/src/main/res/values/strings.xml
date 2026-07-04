@@ -365,6 +365,12 @@
     <string name="novel_font_smaller">减小字号</string>
     <string name="novel_series_prev">上一篇</string>
     <string name="novel_series_next">下一篇</string>
+    <string name="novel_background">阅读背景</string>
+    <string name="novel_bg_follow">跟随主题</string>
+    <string name="novel_bg_paper">纸白</string>
+    <string name="novel_bg_sepia">羊皮</string>
+    <string name="novel_bg_black">纯黑</string>
+    <string name="novel_line_space">行距</string>
     <string name="switch_to_novel">切换到小说模式</string>
     <string name="switch_to_illust">切换到插画模式</string>
 </resources>

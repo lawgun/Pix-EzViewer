@@ -68,14 +68,38 @@ class NovelDetailResponse(
     val novel: Novel
 )
 
-// GET /webview/v2/novel 内嵌 JSON 的正文模型:字段为 camelCase、id 为字符串,
-// 只取正文与系列导航,其余字段靠 Json.ignoreUnknownKeys 容错
+// GET /webview/v2/novel 内嵌 JSON 的正文模型:字段为 camelCase、id 为字符串;
+// images = 用户上传图([uploadedimage:id]),illusts = 引用插画([pixivimage:id]),
+// 其余字段靠 Json.ignoreUnknownKeys 容错
 @Serializable
 class NovelWebResponse(
     val id: String = "",
     val title: String = "",
     val text: String = "",
-    val seriesNavigation: SeriesNavigation? = null
+    val seriesNavigation: SeriesNavigation? = null,
+    val images: Map<String, NovelImage>? = null,
+    val illusts: Map<String, NovelIllustRef>? = null
+)
+
+@Serializable
+class NovelImage(val urls: NovelImageUrls = NovelImageUrls())
+
+@Serializable
+class NovelImageUrls(
+    @SerialName("480mw") val mw480: String? = null,
+    val original: String? = null
+)
+
+@Serializable
+class NovelIllustRef(val illust: NovelIllustBody? = null)
+
+@Serializable
+class NovelIllustBody(val images: NovelIllustImages = NovelIllustImages())
+
+@Serializable
+class NovelIllustImages(
+    val medium: String? = null,
+    val original: String? = null
 )
 
 @Serializable

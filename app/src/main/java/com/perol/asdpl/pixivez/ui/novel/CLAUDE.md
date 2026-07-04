@@ -28,8 +28,10 @@ novel 模式落地 `NovelSearchResultActivity`,illust 模式落地
 | `NovelListFragment.kt` | 泛化小说列表 `BaseVBFragment<FragmentNovelListBinding>`。`newInstance(tag, extraArgs)` 对齐 `PicListFragment`;线性排布 + next_url 上拉分页。Follow/UserBookmark 顶部提供 公开/非公开 切换。 |
 | `NovelListViewModel.kt` | 列表数据源。`NOVEL_TAG`(Recommend/Rank/Follow/UserNovels/UserBookmark/Search)经 `loadFirstRx` 选端点;`restrict` 供 Follow/UserBookmark 切换;`getNextNovels(next_url)` 加载更多。 |
 | `NovelListAdapter.kt` | 列表项适配器 `LBaseQuickAdapter<Novel>`(封面 + 标题 + 作者 + 字数/收藏数),点击进 `NovelActivity`。 |
-| `NovelActivity.kt` | 阅读页(`RinkActivity`)。正文分块渲染:`RecyclerView` + 私有 `NovelReaderAdapter`,position 0 头部(`view_novel_header`,标题/作者/标签),其后每项一块正文(`view_novel_chunk`),块级懒加载避免长文单 TextView 全量测量卡顿;字号 SharedPreferences 记忆(`novel_text_size`,12~32sp,改字号仅重绑正文块)、收藏 toggle、系列上/下一篇。 |
-| `NovelViewModel.kt` | 阅读页数据。并行拉详情(元数据 + 收藏态)与正文;`parseWebNovel` 从 webview HTML 抽 JSON,失败时 fallback `/v1/novel/text` 纯文本;`renderNovelChunks` 在 Default 线程按 `[newpage]`/段落切块(单块上限 3000 字符),`renderNovelText` 将 pixiv 自有标记转纯文本。 |
+| `NovelActivity.kt` | 阅读页(`RinkActivity`)。图文分块渲染:`RecyclerView` + 私有 `NovelReaderAdapter` 三 viewType——position 0 头部(`view_novel_header`,标题/作者点击跳主页/系列名/简介 HTML/标签点击跳小说搜索),正文 Text 块(`view_novel_chunk`,bind 时 `tokenize`→Spannable:chapter 居中加粗、ruby 括注、jumpuri/jump 可点)与 Image 块(`view_novel_image`,Glide 加载,pixivimage 点击跳插画,url 缺失显示标记占位)。字号记忆(`novel_text_size`,12~32sp)、背景主题+行距(`novel_bg`/`novel_line_space`,菜单单选)、收藏 toggle、系列上/下一篇、`[jump:N]` 按页号滚动、进度经 `NovelProgressStore` onPause 存/首载恢复。 |
+| `NovelViewModel.kt` | 阅读页数据。并行拉详情(元数据 + 收藏态)与正文;`parseWebNovel` 从 webview HTML 抽 JSON,失败时 fallback `/v1/novel/text` 纯文本;正文经 `chunkNovel` 在 Default 线程切块,图源 resolver 闭包取自 webview JSON 的 `images`(uploadedimage)与 `illusts`(pixivimage)映射;`renderNovelText` 将标记转纯文本(导出/纯文字场景)。 |
+| `NovelMarkup.kt` | 标记解析纯函数层(零 Android 依赖,JVM 单测直跑)。`chunkNovel`:`[newpage]` 页界分块 + 图片标记抽成 `NovelChunk.Image` + 超限页按段落再切(单块 ≤3000 字符),页号随块透传;`tokenize`:Text 块行内标记 → `NovelToken`(Plain/Chapter/Ruby/JumpUri/JumpPage),未识别标记原样保留。 |
+| `NovelProgressStore.kt` | 阅读进度:novelId → (块位置, 像素偏移),JSON 存 SharedPreferences,LRU 上限 200(`trimLru` 纯函数可测)。 |
 
 ## 正文获取(关键约束)
 
@@ -37,9 +39,11 @@ novel 模式落地 `NovelSearchResultActivity`,illust 模式落地
 `pixiv.novel = { novel: {...}, isOwnWork: ... }`。`parseWebNovel` 以懒惰匹配
 `novel:\s*(\{.*?}),\s*isOwnWork`(DOTALL)+ `isOwnWork` 锚点定位闭合括号,
 取组 1 用 `ServiceFactory.gson` 解析为 `NovelWebResponse`。抽取失败时 fallback
-到 `GET /v1/novel/text`(`NovelTextResponse.novel_text`)。正文内联图片
-(`[pixivimage:]`/`[uploadedimage:]`)MVP 不渲染,标记清洗为纯文本。
-系列导航取自 webview JSON 的 `seriesNavigation.{prevNovel,nextNovel}`。
+到 `GET /v1/novel/text`(`NovelTextResponse.novel_text`)。正文内联图片经
+webview JSON 的图源映射解析:`[uploadedimage:id]` → `images[id].urls`
+(480mw 优先),`[pixivimage:id]` → `illusts[id].illust.images`(medium 优先);
+解析不到 url 的图片块显示原始标记占位。系列导航取自
+`seriesNavigation.{prevNovel,nextNovel}`。
 
 ## 数据源端点(NOVEL_TAG → PixivApiService)
 

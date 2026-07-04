@@ -328,6 +328,12 @@
     <string name="novel_font_smaller">Smaller font</string>
     <string name="novel_series_prev">Previous</string>
     <string name="novel_series_next">Next</string>
+    <string name="novel_background">Reader background</string>
+    <string name="novel_bg_follow">Follow theme</string>
+    <string name="novel_bg_paper">Paper</string>
+    <string name="novel_bg_sepia">Sepia</string>
+    <string name="novel_bg_black">Black</string>
+    <string name="novel_line_space">Line spacing</string>
     <string name="switch_to_novel">Switch to novel mode</string>
     <string name="switch_to_illust">Switch to illust mode</string>
 </resources>

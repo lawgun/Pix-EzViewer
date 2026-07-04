@@ -13,8 +13,8 @@ import kotlinx.coroutines.withContext
 class NovelViewModel : BaseViewModel() {
     val novel = MutableLiveData<Novel?>()
     val web = MutableLiveData<NovelWebResponse?>()
-    // 正文分块结果,切块含多轮正则清洗,放 Default 线程算完再回主线程
-    val chunks = MutableLiveData<List<String>>()
+    // 正文分块结果(图文混排,见 NovelMarkup.chunkNovel),Default 线程算完再回主线程
+    val chunks = MutableLiveData<List<NovelChunk>>()
     // is_bookmarked 在 Novel 中不可变,收藏态单独维护以便乐观更新
     val bookmarked = MutableLiveData(false)
 
@@ -50,8 +50,19 @@ class NovelViewModel : BaseViewModel() {
                 null
             }
             web.value = result
-            chunks.value = result?.let {
-                withContext(Dispatchers.Default) { renderNovelChunks(it.text) }
+            chunks.value = result?.let { w ->
+                withContext(Dispatchers.Default) {
+                    chunkNovel(
+                        w.text,
+                        resolvePixiv = { pid ->
+                            w.illusts?.get(pid.toString())?.illust?.images
+                                ?.let { it.medium ?: it.original }
+                        },
+                        resolveUploaded = { iid ->
+                            w.images?.get(iid)?.urls?.let { it.mw480 ?: it.original }
+                        },
+                    )
+                }
             } ?: emptyList()
         }
     }
@@ -79,7 +90,7 @@ fun parseWebNovel(html: String): NovelWebResponse? {
     return gson.decodeFromString<NovelWebResponse>(json)
 }
 
-// pixiv 正文自有标记 → 纯文本(MVP 不渲染内嵌图片,仅保留可读文本)
+// pixiv 正文自有标记 → 纯文本(导出/纯文字场景用;阅读页走 NovelMarkup 图文管线)
 fun renderNovelText(raw: String): String =
     raw
         .replace(Regex("""\[newpage]"""), "\n\n")
@@ -90,26 +101,3 @@ fun renderNovelText(raw: String): String =
         .replace(Regex("""\[uploadedimage:[^\]]*]"""), "")
         .replace(Regex("""\[jump:[^\]]*]"""), "")
 
-// 单块字符上限:单个 TextView 的 StaticLayout 测量在主线程,块太大长文必卡
-private const val CHUNK_LIMIT = 3000
-
-// 正文 → 分块列表:[newpage] 为天然页界,超限页再按段落切,供 RecyclerView 懒渲染
-fun renderNovelChunks(raw: String): List<String> =
-    raw.split("[newpage]")
-        .map { renderNovelText(it).trim() }
-        .flatMap { if (it.length <= CHUNK_LIMIT) listOf(it) else splitByParagraph(it) }
-        .filter { it.isNotBlank() }
-
-private fun splitByParagraph(page: String): List<String> {
-    val chunks = mutableListOf<String>()
-    val sb = StringBuilder()
-    for (line in page.lineSequence()) {
-        if (sb.isNotEmpty() && sb.length + line.length > CHUNK_LIMIT) {
-            chunks += sb.toString().trim()
-            sb.clear()
-        }
-        sb.appendLine(line)
-    }
-    if (sb.isNotBlank()) chunks += sb.toString().trim()
-    return chunks
-}

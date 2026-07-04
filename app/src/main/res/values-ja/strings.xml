@@ -326,6 +326,12 @@
     <string name="novel_font_smaller">文字を小さく</string>
     <string name="novel_series_prev">前へ</string>
     <string name="novel_series_next">次へ</string>
+    <string name="novel_background">背景色</string>
+    <string name="novel_bg_follow">テーマに従う</string>
+    <string name="novel_bg_paper">ペーパー</string>
+    <string name="novel_bg_sepia">セピア</string>
+    <string name="novel_bg_black">ブラック</string>
+    <string name="novel_line_space">行間</string>
     <string name="switch_to_novel">小説モードへ切り替え</string>
     <string name="switch_to_illust">イラストモードへ切り替え</string>
 </resources>

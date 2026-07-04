@@ -80,6 +80,9 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x ./gradlew
 
+      - name: Run unit tests
+        run: ./gradlew "test${FLAVOR^}DebugUnitTest" --stacktrace
+
       - name: Build ${{ env.FLAVOR }}Debug APK
         run: ./gradlew "assemble${FLAVOR^}Debug" --stacktrace
 
