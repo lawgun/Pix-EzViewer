@@ -211,6 +211,9 @@ class SettingsFragment : PreferenceFragmentCompat() {
         }
         findPreference<ListPreference>("language")!!.setOnPreferenceChangeListener { preference, newValue ->
             PxEZApp.locale = LanguageUtil.langToLocale(newValue.toString().toInt())
+            PxEZApp.instance.pre.edit {
+                putString("language", newValue.toString())
+            }
             snackbarForceRestart()
             true
         }
