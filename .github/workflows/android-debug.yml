@@ -42,28 +42,47 @@ jobs:
     env:
       # push / PR 无输入时默认 git flavor
       FLAVOR: ${{ github.event.inputs.flavor || 'git' }}
+      # secrets 在 step 级 if 中不可用 → 先在 job 级映射成布尔
+      HAS_STABLE_KEYSTORE: ${{ secrets.KEYSTORE_BASE64 != '' }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           submodules: recursive # 需要 Ketch 子模块(:ketch)
 
       - name: Set up JDK 21
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: "21"
           cache: gradle
 
       - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
       # debug 构建类型对所有 flavor 强制使用名为 "config" 的签名,
       # 且 app/build.gradle.kts 在配置期就会读取 rootProject 的 keystore.properties。
-      # 此处生成一次性测试 keystore(零密钥即可出包)。
-      # 注意:每次运行密钥不同 → 签名不一致,覆盖安装前需先卸载旧版。
-      #       若需跨次升级安装,改用下方 secrets 方案(见末尾说明)。
-      - name: Generate throwaway signing keystore
+      # • 已配置 KEYSTORE_BASE64 等 secrets → 还原稳定签名 keystore,后续构建可直接覆盖安装;
+      # • 未配置(fork / PR 校验场景)→ 回退为一次性测试 keystore(覆盖安装前需先卸载旧版)。
+
+      - name: Restore stable signing keystore from secrets
+        if: env.HAS_STABLE_KEYSTORE == 'true'
+        env:
+          KEYSTORE_B64: ${{ secrets.KEYSTORE_BASE64 }}
+          KS_STORE_PASS: ${{ secrets.KEYSTORE_PASSWORD }}
+          KS_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KS_KEY_PASS: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          echo "$KEYSTORE_B64" | base64 --decode > "$GITHUB_WORKSPACE/ci-signing.keystore"
+          cat > "$GITHUB_WORKSPACE/keystore.properties" <<EOF
+          storeFile=$GITHUB_WORKSPACE/ci-signing.keystore
+          storePassword=$KS_STORE_PASS
+          keyAlias=$KS_ALIAS
+          keyPassword=$KS_KEY_PASS
+          EOF
+
+      - name: Generate throwaway signing keystore (fallback)
+        if: env.HAS_STABLE_KEYSTORE != 'true'
         run: |
           keytool -genkeypair -v \
             -keystore "$GITHUB_WORKSPACE/ci-debug.keystore" \
@@ -87,7 +106,7 @@ jobs:
         run: ./gradlew "assemble${FLAVOR^}Debug" --stacktrace
 
       - name: Upload APK artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: PixEz-${{ env.FLAVOR }}-debug-${{ github.run_number }}-${{ github.sha }}
           path: app/build/outputs/apk/**/debug/*.apk
