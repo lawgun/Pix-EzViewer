@@ -38,7 +38,6 @@ import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import com.google.android.material.transition.platform.MaterialArcMotion
 import com.google.android.material.transition.platform.MaterialContainerTransform
 import com.google.android.material.transition.platform.MaterialContainerTransformSharedElementCallback
-import com.perol.asdpl.pixivez.objects.LanguageUtil
 import com.perol.asdpl.pixivez.objects.ThemeUtil
 import com.perol.asdpl.pixivez.services.PxEZApp
 
@@ -92,7 +91,9 @@ abstract class RinkActivity : AppCompatActivity() {
             duration = 250L
         }
         super.onCreate(savedInstanceState)
-        LanguageUtil.setLocale(this, PxEZApp.locale)
+        // Locale application is handled by AppCompatDelegate per-app locales
+        // (auto-stored via AppLocalesMetadataHolderService); a manual
+        // resources.updateConfiguration here would fight it on API 33+.
         ThemeUtil.themeInit(this)
         WindowCompat.getInsetsController(window, window.decorView).apply {
             show(WindowInsetsCompat.Type.statusBars())

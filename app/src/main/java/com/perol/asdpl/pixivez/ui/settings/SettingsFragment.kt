@@ -33,10 +33,12 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.widget.ArrayAdapter
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import androidx.core.net.toUri
+import androidx.core.os.LocaleListCompat
 import androidx.core.widget.addTextChangedListener
 import androidx.preference.ListPreference
 import androidx.preference.Preference
@@ -209,12 +211,23 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 CrashHandler.instance.e("VersionInfo", "Exception", e)
             }
         }
-        findPreference<ListPreference>("language")!!.setOnPreferenceChangeListener { preference, newValue ->
-            PxEZApp.locale = LanguageUtil.langToLocale(newValue.toString().toInt())
+        findPreference<ListPreference>("language")!!.setOnPreferenceChangeListener { _, newValue ->
+            val value = newValue.toString()
+            // Keep legacy pref in sync: PxEZApp.locale feeds Accept-Language headers
+            PxEZApp.locale = LanguageUtil.langToLocale(value.toInt())
             PxEZApp.instance.pre.edit {
-                putString("language", newValue.toString())
+                putString("language", value)
             }
-            snackbarForceRestart()
+            // UI strings: delegate to per-app locales. Applies to every activity,
+            // recreates them immediately, and persists across process death
+            // (autoStoreLocales). No restart prompt needed.
+            if (value.toInt() == LanguageUtil.Language.SYSTEM) {
+                AppCompatDelegate.setApplicationLocales(LocaleListCompat.getEmptyLocaleList())
+            } else {
+                AppCompatDelegate.setApplicationLocales(
+                    LocaleListCompat.create(LanguageUtil.langToLocale(value.toInt()))
+                )
+            }
             true
         }
 

@@ -34,6 +34,7 @@ import android.os.Environment
 import android.util.Log
 import android.webkit.MimeTypeMap
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import androidx.preference.PreferenceManager
 import com.ketch.DownloadConfig
 import com.ketch.Ketch
@@ -97,6 +98,19 @@ class PxEZApp : Application() {
             CrashHandler.instance.init()
         }
         locale = LanguageUtil.langToLocale(pre.getString("language", "-1")!!.toInt())
+        // One-time migration: carry the legacy "language" pref into AppCompat
+        // per-app locales so a previously chosen language keeps working.
+        if (!pre.getBoolean("locale_migrated", false)) {
+            val lang = pre.getString("language", "-1")!!.toInt()
+            if (lang != LanguageUtil.Language.SYSTEM &&
+                AppCompatDelegate.getApplicationLocales().isEmpty
+            ) {
+                AppCompatDelegate.setApplicationLocales(
+                    LocaleListCompat.create(LanguageUtil.langToLocale(lang))
+                )
+            }
+            pre.edit().putBoolean("locale_migrated", true).apply()
+        }
 
         //val workManager = WorkManager.getInstance(this) //todo: config download concurrency
         ketch = Ketch.builder().setOkHttpClient(RestClient.downloadHttpClient)
